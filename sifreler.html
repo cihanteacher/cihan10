@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şifre & Hesap Yöneticisi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Effects */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Modal Animation */
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .animate-modal {
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="p-3 sm:p-6 md:p-8">
+
+    <!-- Container -->
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- Header & Top Bar -->
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 flex items-center gap-3">
+                        <span>🔐</span> Şifre &amp; Hesap Yöneticisi
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1">Tüm hesap bilgilerinizi güvende tutun ve yönetin.</p>
+                </div>
+
+                <button onclick="openAddCustomModal()" class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-600/30 transition-all active:scale-95 text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Yeni Site Ekle
+                </button>
+            </div>
+
+            <!-- Search and Stats Bar -->
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full sm:w-96">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </span>
+                    <input type="text" id="searchInput" oninput="filterSites()" placeholder="Site veya uygulama ara..." class="w-full pl-10 pr-4 py-3 bg-slate-800/90 border border-slate-700/80 rounded-xl text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+
+                <div class="flex items-center gap-4 text-xs sm:text-sm text-slate-400 w-full sm:w-auto justify-between sm:justify-end border-t border-slate-800 sm:border-t-0 pt-3 sm:pt-0">
+                    <div>Toplam: <span id="totalCount" class="font-semibold text-slate-200">0</span></div>
+                    <div class="h-4 w-px bg-slate-700"></div>
+                    <div>Kayıtlı: <span id="savedCount" class="font-semibold text-emerald-400">0</span></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Categories & Grid -->
+        <main id="categoriesContainer" class="space-y-8">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+    </div>
+
+    <!-- SITE MODAL -->
+    <div id="siteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal opacity-0 transition-opacity duration-200">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-modal transform">
+            
+            <!-- Modal Header -->
+            <div class="p-6 bg-slate-800/50 border-b border-slate-800 flex items-start justify-between">
+                <div class="flex items-center gap-4">
+                    <div id="modalLogoContainer" class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 p-2 flex items-center justify-center shrink-0">
+                        <img id="modalLogo" src="" alt="Logo" class="w-8 h-8 object-contain">
+                    </div>
+                    <div>
+                        <h3 id="modalTitle" class="text-xl font-bold text-white">Site Adı</h3>
+                        <p id="modalCategory" class="text-xs text-indigo-400 font-medium mt-0.5">Kategori</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="modalForm" onsubmit="saveSiteData(event)" class="p-6 space-y-4">
+                <input type="hidden" id="modalSiteId">
+
+                <!-- User Field -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Kullanıcı Adı / e-Posta / T.C.</label>
+                    <div class="relative">
+                        <input type="text" id="modalUser" placeholder="Örn: kullanıcı@email.com veya 12345678901" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <button type="button" onclick="copyToClipboard('modalUser', 'Kullanıcı adı')" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors" title="Kopyala">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Şifre / Parola</label>
+                    <div class="relative">
+                        <input type="password" id="modalPass" placeholder="••••••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-20 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            <button type="button" onclick="togglePasswordVisibility()" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors" title="Göster/Gizle">
+                                <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                            <button type="button" onclick="copyToClipboard('modalPass', 'Şifre')" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors" title="Kopyala">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes Field -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Notlar / İpuçları</label>
+                    <textarea id="modalNotes" rows="2" placeholder="Örn: Müşteri numarası, kurtarma e-postası vb." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"></textarea>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-4 flex items-center justify-between border-t border-slate-800 mt-6">
+                    <button type="button" onclick="clearSiteData()" class="px-4 py-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 rounded-xl text-sm font-medium transition-colors">
+                        Kaydı Sil
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">
+                            Kapat
+                        </button>
+                        <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-indigo-600/30 transition-all active:scale-95">
+                            Kaydet
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD CUSTOM SITE MODAL -->
+    <div id="addCustomModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal opacity-0 transition-opacity duration-200">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-modal transform">
+            <div class="p-6 bg-slate-800/50 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span>🌐</span> Yeni Özel Site Ekle
+                </h3>
+                <button onclick="closeAddCustomModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form onsubmit="saveCustomSite(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Site / Uygulama Adı *</label>
+                    <input type="text" id="customName" required placeholder="Örn: Github, Netflix vb." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Alan Adı (Domain)</label>
+                    <input type="text" id="customDomain" placeholder="Örn: github.com (Logo çekmek için)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Kategori</label>
+                    <select id="customCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="cat_0">🏦 Bankacılık, Yatırım ve Finans</option>
+                        <option value="cat_1">🛒 Alışveriş, Market ve Yemek</option>
+                        <option value="cat_2">✈️ Seyahat ve Ulaşım</option>
+                        <option value="cat_3">💬 Sosyal Medya ve İletişim</option>
+                        <option value="cat_4">🏛️ Kamu, Eğitim ve Resmi</option>
+                        <option value="cat_5">🎬 Medya, Eğlence ve Bahis</option>
+                        <option value="cat_6">🛠️ Yazılım, Araçlar ve Diğer</option>
+                        <option value="cat_7" selected>🌐 Diğer Siteler</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex items-center justify-end gap-2 border-t border-slate-800">
+                    <button type="button" onclick="closeAddCustomModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-medium transition-colors">İptal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium shadow-lg shadow-indigo-600/30 transition-all active:scale-95">Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 flex items-center gap-3 bg-slate-800 text-slate-100 border border-slate-700 px-4 py-3 rounded-xl shadow-2xl">
+        <span id="toastIcon" class="text-emerald-400 text-lg">✓</span>
+        <span id="toastMessage" class="text-sm font-medium">İşlem başarılı!</span>
+    </div>
+
+    <!-- JavaScript Data and Controller Logic -->
+    <script>
+        const initialCategories = [
+            {
+                id: "cat_0",
+                name: "🏦 Bankacılık, Yatırım ve Finans",
+                items: [
+                    { id: "akbank", name: "Akbank", domain: "akbank.com" },
+                    { id: "enpara", name: "Enpara", domain: "qnb.com.tr/enpara" },
+                    { id: "cepteteb", name: "Cepteteb", domain: "cepteteb.com.tr" },
+                    { id: "garanti", name: "Garanti BBVA", domain: "garantibbva.com.tr" },
+                    { id: "denizbank", name: "DenizBank", domain: "denizbank.com" },
+                    { id: "finansbank", name: "QNB Finansbank", domain: "qnb.com.tr" },
+                    { id: "yapikredi", name: "Yapı Kredi", domain: "yapikredi.com.tr" },
+                    { id: "vakifbank", name: "Vakıfbank", domain: "vakifbank.com.tr" },
+                    { id: "ziraat", name: "Ziraat Bankası", domain: "ziraatbank.com.tr" },
+                    { id: "halkbank", name: "Halkbank", domain: "halkbank.com.tr" },
+                    { id: "onbank", name: "ON", domain: "burgan.com.tr" },
+                    { id: "isbank", name: "İş Bankası", domain: "isbank.com.tr" },
+                    { id: "burgantrade", name: "Burgan Trade", domain: "burgantrade.com" },
+                    { id: "midas", name: "Midas", domain: "getmidas.com" },
+                    { id: "infoyatirim", name: "Info Yatırım", domain: "infoyatirim.com" },
+                    { id: "a1capital", name: "A1 Capital", domain: "a1capital.com.tr" },
+                    { id: "btcturk", name: "BtcTurk", domain: "btcturk.com" },
+                    { id: "binance", name: "Binance", domain: "binance.com" },
+                    { id: "binancetr", name: "Binance TR", domain: "trbinance.com" },
+                    { id: "tradingview", name: "TradingView", domain: "tradingview.com" },
+                    { id: "papara", name: "Papara", domain: "papara.com" }
+                ]
+            },
+            {
+                id: "cat_1",
+                name: "🛒 Alışveriş, Market ve Yemek",
+                items: [
+                    { id: "amazon", name: "Amazon", domain: "amazon.com.tr" },
+                    { id: "hepsiburada", name: "Hepsiburada", domain: "hepsiburada.com" },
+                    { id: "trendyol", name: "Trendyol", domain: "trendyol.com" },
+                    { id: "migros", name: "Migros", domain: "migros.com.tr" },
+                    { id: "getir", name: "Getir", domain: "getir.com" },
+                    { id: "yemeksepeti", name: "Yemeksepeti", domain: "yemeksepeti.com" },
+                    { id: "sahibinden", name: "Sahibinden", domain: "sahibinden.com" },
+                    { id: "lcw", name: "LC Waikiki", domain: "lcwaikiki.com" },
+                    { id: "koton", name: "Koton", domain: "koton.com" },
+                    { id: "flo", name: "FLO", domain: "flo.com.tr" },
+                    { id: "temu", name: "Temu", domain: "temu.com" },
+                    { id: "tiklagelsin", name: "Tıkla Gelsin", domain: "tiklagelsin.com" },
+                    { id: "clubtotal", name: "Club Total", domain: "totalenergies.com.tr" },
+                    { id: "shell", name: "Shell", domain: "shell.com.tr" }
+                ]
+            },
+            {
+                id: "cat_2",
+                name: "✈️ Seyahat ve Ulaşım",
+                items: [
+                    { id: "pegasus", name: "Pegasus", domain: "flypgs.com" },
+                    { id: "booking", name: "Booking.com", domain: "booking.com" },
+                    { id: "ajet", name: "AJet", domain: "ajet.com" },
+                    { id: "thy", name: "Türk Hava Yolları", domain: "turkishairlines.com" },
+                    { id: "airbnb", name: "Airbnb", domain: "airbnb.com" },
+                    { id: "flixbus", name: "Flixbus", domain: "flixbus.com.tr" },
+                    { id: "ido", name: "İDO", domain: "ido.com.tr" },
+                    { id: "uber", name: "Uber", domain: "uber.com" }
+                ]
+            },
+            {
+                id: "cat_3",
+                name: "💬 Sosyal Medya ve İletişim",
+                items: [
+                    { id: "instagram", name: "Instagram", domain: "instagram.com" },
+                    { id: "facebook", name: "Facebook", domain: "facebook.com" },
+                    { id: "x", name: "X (Twitter)", domain: "x.com" },
+                    { id: "vk", name: "VKontakte", domain: "vk.com" },
+                    { id: "telegram", name: "Telegram", domain: "telegram.org" },
+                    { id: "gmail", name: "Gmail", domain: "mail.google.com" },
+                    { id: "hotmail", name: "Hotmail / Outlook", domain: "outlook.live.com" },
+                    { id: "pembepanjur", name: "Pembe Panjur", domain: "pembepanjur.com" },
+                    { id: "gonuldensevenler", name: "Gönülden Sevenler", domain: "gonuldensevenler.com" }
+                ]
+            },
+            {
+                id: "cat_4",
+                name: "🏛️ Kamu, Eğitim ve Resmi",
+                items: [
+                    { id: "edevlet", name: "E-Devlet", domain: "turkiye.gov.tr" },
+                    { id: "enabiz", name: "E-Nabız", domain: "enabiz.gov.tr" },
+                    { id: "mebbis", name: "Mebbis", domain: "mebbis.meb.gov.tr" },
+                    { id: "eokul", name: "E-Okul", domain: "e-okul.meb.gov.tr" }
+                ]
+            },
+            {
+                id: "cat_5",
+                name: "🎬 Medya, Eğlence ve Bahis",
+                items: [
+                    { id: "spotify", name: "Spotify", domain: "spotify.com" },
+                    { id: "imdb", name: "IMDb", domain: "imdb.com" },
+                    { id: "1xbet", name: "1xBet", domain: "1xbet.com" },
+                    { id: "bilyoner", name: "Bilyoner", domain: "bilyoner.com" }
+                ]
+            },
+            {
+                id: "cat_6",
+                name: "🛠️ Yazılım, Araçlar ve Diğer",
+                items: [
+                    { id: "lastpass", name: "LastPass", domain: "lastpass.com" },
+                    { id: "hotspotshield", name: "Hotspot Shield", domain: "hotspotshield.com" },
+                    { id: "firefox", name: "Firefox", domain: "mozilla.org" },
+                    { id: "opera", name: "Opera", domain: "opera.com" },
+                    { id: "alldebrid", name: "Alldebrid", domain: "alldebrid.com" },
+                    { id: "xiaomi", name: "Xiaomi Home", domain: "mi.com" },
+                    { id: "turkiyesigorta", name: "Türkiye Sigorta", domain: "turkiyesigorta.com.tr" }
+                ]
+            },
+            {
+                id: "cat_7",
+                name: "🌐 Diğer Siteler",
+                items: []
+            }
+        ];
+
+        let categories = [];
+        let siteMap = {};
+
+        // App Initialization
+        function initApp() {
+            loadCustomSites();
+            buildSiteMap();
+            renderGrid();
+            updateStats();
+        }
+
+        function loadCustomSites() {
+            const savedCustom = localStorage.getItem('pm_custom_sites');
+            categories = JSON.parse(JSON.stringify(initialCategories));
+            
+            if (savedCustom) {
+                const customItems = JSON.parse(savedCustom);
+                customItems.forEach(item => {
+                    const catObj = categories.find(c => c.id === item.categoryId) || categories[categories.length - 1];
+                    catObj.items.push(item);
+                });
+            }
+        }
+
+        function buildSiteMap() {
+            siteMap = {};
+            categories.forEach(cat => {
+                cat.items.forEach(item => {
+                    siteMap[item.id] = { ...item, categoryName: cat.name, categoryId: cat.id };
+                });
+            });
+        }
+
+        function getFaviconUrl(domain) {
+            if (!domain) return '';
+            return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+        }
+
+        function renderGrid() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            categories.forEach(cat => {
+                if (cat.items.length === 0 && cat.id !== "cat_7") return;
+
+                const catSection = document.createElement('section');
+                catSection.className = 'category-section space-y-3';
+                catSection.setAttribute('data-category-id', cat.id);
+
+                catSection.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h2 class="text-base font-bold text-slate-200 flex items-center gap-2">
+                            ${cat.name}
+                            <span class="text-xs bg-slate-800 text-slate-400 font-normal px-2 py-0.5 rounded-full border border-slate-700/50">${cat.items.length}</span>
+                        </h2>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 site-grid">
+                    </div>
+                `;
+
+                const grid = catSection.querySelector('.site-grid');
+
+                cat.items.forEach(item => {
+                    const isSaved = hasSavedCredentials(item.id);
+                    const faviconSrc = getFaviconUrl(item.domain);
+
+                    const card = document.createElement('button');
+                    card.type = 'button';
+                    card.className = 'glass-card rounded-xl p-3 flex items-center gap-3 text-left w-full relative group cursor-pointer site-card';
+                    card.setAttribute('data-site-id', item.id);
+                    card.setAttribute('data-site-name', item.name.toLowerCase());
+                    card.onclick = () => openSiteModal(item.id);
+
+                    card.innerHTML = `
+                        <div class="w-9 h-9 rounded-lg bg-slate-950/60 border border-slate-800 flex items-center justify-center shrink-0 p-1.5 overflow-hidden">
+                            <img src="${faviconSrc}" alt="${item.name}" class="w-full h-full object-contain" onerror="this.onerror=null; this.src=''; this.parentNode.innerHTML='<span class=\'text-xs font-bold text-indigo-400\'>${item.name.substring(0,2).toUpperCase()}</span>'">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-xs sm:text-sm font-semibold text-slate-100 truncate group-hover:text-indigo-300 transition-colors">${item.name}</h3>
+                            <p class="text-[11px] text-slate-400 truncate">${item.domain || 'Özel'}</p>
+                        </div>
+                        <div id="badge_${item.id}" class="absolute top-2 right-2 ${isSaved ? 'block' : 'hidden'}">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 block ring-4 ring-slate-900" title="Kayıtlı bilgi var"></span>
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                });
+
+                if (cat.id === "cat_7") {
+                    const addCard = document.createElement('button');
+                    addCard.type = 'button';
+                    addCard.className = 'border border-dashed border-slate-700/80 hover:border-indigo-500/60 hover:bg-indigo-500/5 rounded-xl p-3 flex items-center justify-center gap-2 text-slate-400 hover:text-indigo-300 text-xs font-medium transition-all cursor-pointer';
+                    addCard.onclick = openAddCustomModal;
+                    addCard.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Özel Ekle</span>
+                    `;
+                    grid.appendChild(addCard);
+                }
+
+                container.appendChild(catSection);
+            });
+        }
+
+        function hasSavedCredentials(siteId) {
+            const user = localStorage.getItem(`pm_${siteId}_user`);
+            const pass = localStorage.getItem(`pm_${siteId}_pass`);
+            return !!(user || pass);
+        }
+
+        function filterSites() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.site-card');
+
+            cards.forEach(card => {
+                const name = card.getAttribute('data-site-name');
+                if (name.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.querySelectorAll('.category-section').forEach(sec => {
+                const visibleCards = sec.querySelectorAll('.site-card[style="display: flex;"]');
+                if (query !== '' && visibleCards.length === 0) {
+                    sec.style.display = 'none';
+                } else {
+                    sec.style.display = 'block';
+                }
+            });
+        }
+
+        function updateStats() {
+            let total = 0;
+            let saved = 0;
+
+            Object.keys(siteMap).forEach(siteId => {
+                total++;
+                if (hasSavedCredentials(siteId)) {
+                    saved++;
+                }
+            });
+
+            document.getElementById('totalCount').innerText = total;
+            document.getElementById('savedCount').innerText = saved;
+        }
+
+        // Modal Controls
+        function openSiteModal(siteId) {
+            const item = siteMap[siteId];
+            if (!item) return;
+
+            document.getElementById('modalSiteId').value = item.id;
+            document.getElementById('modalTitle').innerText = item.name;
+            document.getElementById('modalCategory').innerText = item.categoryName;
+
+            const logoImg = document.getElementById('modalLogo');
+            const logoContainer = document.getElementById('modalLogoContainer');
+            const faviconSrc = getFaviconUrl(item.domain);
+
+            logoImg.src = faviconSrc;
+            logoImg.onerror = function() {
+                this.onerror = null;
+                this.src = '';
+                logoContainer.innerHTML = `<span class="text-base font-bold text-indigo-400">${item.name.substring(0, 2).toUpperCase()}</span>`;
+            };
+
+            // Load saved fields
+            document.getElementById('modalUser').value = localStorage.getItem(`pm_${siteId}_user`) || '';
+            document.getElementById('modalPass').value = localStorage.getItem(`pm_${siteId}_pass`) || '';
+            document.getElementById('modalNotes').value = localStorage.getItem(`pm_${siteId}_notes`) || '';
+
+            // Reset password input type
+            const passInput = document.getElementById('modalPass');
+            passInput.type = 'password';
+
+            const modal = document.getElementById('siteModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('siteModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveSiteData(e) {
+            e.preventDefault();
+            const siteId = document.getElementById('modalSiteId').value;
+            const user = document.getElementById('modalUser').value.trim();
+            const pass = document.getElementById('modalPass').value;
+            const notes = document.getElementById('modalNotes').value.trim();
+
+            if (user) localStorage.setItem(`pm_${siteId}_user`, user);
+            else localStorage.removeItem(`pm_${siteId}_user`);
+
+            if (pass) localStorage.setItem(`pm_${siteId}_pass`, pass);
+            else localStorage.removeItem(`pm_${siteId}_pass`);
+
+            if (notes) localStorage.setItem(`pm_${siteId}_notes`, notes);
+            else localStorage.removeItem(`pm_${siteId}_notes`);
+
+            // Update Badge
+            const badge = document.getElementById(`badge_${siteId}`);
+            if (badge) {
+                if (user || pass) badge.classList.remove('hidden');
+                else badge.classList.add('hidden');
+            }
+
+            updateStats();
+            showToast('Bilgiler kaydedildi', '✓');
+            closeModal();
+        }
+
+        function clearSiteData() {
+            const siteId = document.getElementById('modalSiteId').value;
+            localStorage.removeItem(`pm_${siteId}_user`);
+            localStorage.removeItem(`pm_${siteId}_pass`);
+            localStorage.removeItem(`pm_${siteId}_notes`);
+
+            document.getElementById('modalUser').value = '';
+            document.getElementById('modalPass').value = '';
+            document.getElementById('modalNotes').value = '';
+
+            const badge = document.getElementById(`badge_${siteId}`);
+            if (badge) badge.classList.add('hidden');
+
+            updateStats();
+            showToast('Kayıt silindi', '🗑️');
+            closeModal();
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('modalPass');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+            } else {
+                passInput.type = 'password';
+            }
+        }
+
+        function copyToClipboard(elementId, label) {
+            const input = document.getElementById(elementId);
+            if (!input.value) {
+                showToast(`${label} boş`, '⚠️');
+                return;
+            }
+
+            // Execute copy
+            navigator.clipboard.writeText(input.value).then(() => {
+                showToast(`${label} kopyalandı!`, '📋');
+            }).catch(() => {
+                // Fallback
+                input.select();
+                document.execCommand('copy');
+                showToast(`${label} kopyalandı!`, '📋');
+            });
+        }
+
+        // Add Custom Site Modal
+        function openAddCustomModal() {
+            document.getElementById('customName').value = '';
+            document.getElementById('customDomain').value = '';
+            const modal = document.getElementById('addCustomModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+            }, 10);
+        }
+
+        function closeAddCustomModal() {
+            const modal = document.getElementById('addCustomModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveCustomSite(e) {
+            e.preventDefault();
+            const name = document.getElementById('customName').value.trim();
+            let domain = document.getElementById('customDomain').value.trim().toLowerCase();
+            const catId = document.getElementById('customCategory').value;
+
+            if (!name) return;
+
+            // Clean domain prefix if present
+            domain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+
+            const newId = 'custom_' + Date.now();
+            const newItem = {
+                id: newId,
+                name: name,
+                domain: domain,
+                categoryId: catId
+            };
+
+            const savedCustom = JSON.parse(localStorage.getItem('pm_custom_sites') || '[]');
+            savedCustom.push(newItem);
+            localStorage.setItem('pm_custom_sites', JSON.stringify(savedCustom));
+
+            initApp();
+            closeAddCustomModal();
+            showToast('Yeni site eklendi!', '✨');
+        }
+
+        // Toast Notification System
+        function showToast(message, icon = '✓') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastIcon').innerText = icon;
+
+            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+            }, 2000);
+        }
+
+        // Close Modals on Backdrop Click
+        window.onclick = function(e) {
+            const modal1 = document.getElementById('siteModal');
+            const modal2 = document.getElementById('addCustomModal');
+            if (e.target === modal1) closeModal();
+            if (e.target === modal2) closeAddCustomModal();
+        };
+
+        // Initialize App on DOM Ready
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

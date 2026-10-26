@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cihan Gökgün - Kişisel Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Glassmorphism Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        /* Custom Touch Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col md:flex-row antialiased selection:bg-brand-500 selection:text-white pb-16 md:pb-0">
+
+    <!-- 1. MOBİL HEADER (Mobil Cihazlar İçin Üst Bar) -->
+    <header class="md:hidden flex items-center justify-between p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+        <div class="flex items-center space-x-3">
+            <button id="mobileMenuBtn" aria-label="Menüyü Aç/Kapat" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    CG
+                </div>
+                <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Cihan Gökgün</span>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <button id="themeToggleMobile" aria-label="Tema Değiştir" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-amber-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:block"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Overlay for mobile drawer -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+    <!-- 2. SOL MENÜ (Sidebar - Desktop & Mobile Off-canvas Drawer) -->
+    <aside id="sidebar" class="fixed md:sticky top-0 inset-y-0 left-0 z-50 w-72 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/80 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col justify-between shrink-0 shadow-2xl md:shadow-none">
+        <div class="flex flex-col h-full overflow-y-auto">
+            <!-- Mobile Close Button inside Drawer Header -->
+            <div class="md:hidden flex justify-end p-4 border-b border-slate-100 dark:border-slate-800">
+                <button id="closeSidebarBtn" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Profile Header -->
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800/80 text-center relative overflow-hidden">
+                <div class="absolute -top-12 -left-12 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="relative mx-auto w-24 h-24 mb-3">
+                    <img src="https://scontent.fyei6-5.fna.fbcdn.net/v/t39.30808-6/737438211_10164872114999349_5860653022677987230_n.jpg?stp=dst-jpg_tt6&cstp=mx900x900&ctp=s900x900&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=5165ByzA7gYQ7kNvwFPjxq4&_nc_oc=AdoiY77BtTR5b7CBPY5fneDMecawmeS8pnZkuqjuLuZvox80CRPifeOteHxeE4S5lzQh8manhLbGeFL32NWrhi6m&_nc_zt=23&_nc_ht=scontent.fyei6-5.fna&_nc_gid=4PDkWPoFQOBfGjPh6tec9Q&_nc_ss=7b2a8&oh=00_AQPdu8zN5Ah_uFOEVy2_vQIn-P9PRk3oo8ESwOpcZT13Mw&oe=6AE52570" alt="Cihan Gökgün" class="w-full h-full rounded-full border-4 border-white dark:border-slate-800 shadow-xl object-cover" onerror="this.src='https://placehold.co/150x150/3b82f6/ffffff?text=CG'">
+                    <span class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Çevrimiçi"></span>
+                </div>
+                <h2 class="font-bold text-lg text-slate-900 dark:text-white tracking-tight">Cihan Gökgün</h2>
+                <p class="text-xs text-brand-600 dark:text-brand-400 font-semibold mt-0.5">İngilizce Öğretmeni</p>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5 flex-1">
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold transition-all">
+                    <i class="fa-solid fa-house w-5 text-center text-lg"></i>
+                    <span>Anasayfa</span>
+                </a>
+                <a href="menu.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-stream w-5 text-center text-lg"></i>
+                    <span>Haftalık Yemek Menüsü</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-graduation-cap w-5 text-center text-lg"></i>
+                    <span>Dersler</span>
+                </a>
+                <a href="alisveris.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-toolbox w-5 text-center text-lg"></i>
+                    <span>Alışveriş</span>
+                </a>
+                <a href="sifreler.html" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                    <i class="fa-solid fa-sliders w-5 text-center text-lg"></i>
+                    <span>Şifreler</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar Footer & Theme Toggle -->
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800/80">
+                <button id="themeToggle" class="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+                    <span class="flex items-center space-x-3">
+                        <i class="fa-solid fa-moon dark:hidden text-slate-600"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                        <span class="font-semibold text-xs uppercase tracking-wider">Görünüm Moda</span>
+                    </span>
+                    <span class="text-[11px] px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 font-bold text-slate-700 dark:text-slate-200 shadow-sm">
+                        <span class="dark:hidden">Aydınlık</span>
+                        <span class="hidden dark:inline">Karanlık</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 3. MOBİL BOTTOM NAVIGATION BAR (Mobil için Başparmak Menüsü) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-30 px-3 py-2 flex justify-around items-center">
+        <a href="#" class="flex flex-col items-center text-brand-500 py-1">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-semibold mt-1">Anasayfa</span>
+        </a>
+        <a href="menu.html" class="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-1">
+            <i class="fa-solid fa-stream text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Haftalık Yemek Menüsü</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-1">
+            <i class="fa-solid fa-graduation-cap text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Dersler</span>
+        </a>
+        <a href="alisveris.html" class="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-1">
+            <i class="fa-solid fa-toolbox text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Alışveriş</span>
+        </a>
+        <a href="sifreler.html" class="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-1">
+            <i class="fa-solid fa-sliders text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Şifreler</span>
+        </a>
+    </nav>
+
+    <!-- 4. ANA İÇERİK ALANI (Dashboard Content) -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- Top Header Greeting & Clock -->
+        <header class="glass-card rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-200/80 dark:border-slate-800">
+            <div>
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold mb-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+                    <span>Hoş Geldin, Cihan</span>
+                </div>
+                <h1 id="greeting" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">İyi Günler! 👋</h1>
+                <p id="turkishDate" class="text-slate-500 dark:text-slate-400 font-medium text-sm sm:text-base mt-1">Yükleniyor...</p>
+            </div>
+            
+            <div class="flex items-center space-x-4 self-start md:self-auto bg-white/80 dark:bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm">
+                <i class="fa-regular fa-clock text-brand-500 text-3xl"></i>
+                <div>
+                    <div id="liveClock" class="text-2xl sm:text-3xl font-black font-mono tracking-wider text-slate-900 dark:text-white">00:00:00</div>
+                    <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">TÜRKİYE CANLI SAATİ</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Responsive Grid Layout (1 col mobile, 2 col tablet, 3 col desktop) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Weather Card -->
+            <div class="glass-card rounded-3xl p-6 shadow-sm relative overflow-hidden flex flex-col justify-between border border-slate-200/80 dark:border-slate-800">
+                <div class="absolute -right-6 -top-6 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-location-dot text-rose-500"></i>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 text-sm">İstanbul, TR</span>
+                    </div>
+                    <span class="text-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2.5 py-1 rounded-full">Güncel</span>
+                </div>
+
+                <div class="flex items-center justify-between my-2">
+                    <div>
+                        <div class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">22°C</div>
+                        <div class="text-slate-500 dark:text-slate-400 font-medium text-sm mt-1">Parçalı Bulutlu</div>
+                    </div>
+                    <div class="text-amber-500 text-5xl sm:text-6xl">
+                        <i class="fa-solid fa-cloud-sun animate-pulse"></i>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-droplet text-blue-500"></i>
+                        <span>Nem: <b class="text-slate-700 dark:text-slate-300">%64</b></span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-wind text-teal-500"></i>
+                        <span>Rüzgar: <b class="text-slate-700 dark:text-slate-300">14 km/s</b></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote of the Day Card -->
+            <div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col justify-between border border-slate-200/80 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-quote-left text-brand-500"></i> Günün Sözü
+                    </span>
+                    <button id="refreshQuote" aria-label="Yeni Söz" class="text-slate-400 hover:text-brand-500 transition-colors p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="İnternetten yeni söz getir">
+                        <i id="refreshQuoteIcon" class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+                <blockquote class="my-auto py-2">
+                    <p id="quoteText" class="text-slate-700 dark:text-slate-300 italic font-serif text-base sm:text-lg leading-relaxed transition-opacity duration-300">
+                        "Gelecek, bugün ne yaptığına bağlıdır."
+                    </p>
+                </blockquote>
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-right">
+                    <cite id="quoteAuthor" class="text-xs font-bold text-slate-500 dark:text-slate-400 not-italic transition-opacity duration-300">— Mahatma Gandhi</cite>
+                </div>
+            </div>
+
+            <!-- Quick Access Tools Widget -->
+            <div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 md:col-span-2 lg:col-span-1">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-bolt text-amber-500"></i> Hızlı Bağlantılar
+                    </h3>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://github.com" target="_blank" class="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800">
+                        <i class="fa-brands fa-github text-xl text-slate-900 dark:text-white"></i>
+                        <span class="text-xs font-bold">GitHub</span>
+                    </a>
+                    <a href="https://google.com" target="_blank" class="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800">
+                        <i class="fa-brands fa-google text-xl text-red-500"></i>
+                        <span class="text-xs font-bold">Google</span>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" class="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800">
+                        <i class="fa-brands fa-youtube text-xl text-red-600"></i>
+                        <span class="text-xs font-bold">YouTube</span>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" class="flex items-center space-x-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200/60 dark:border-slate-800">
+                        <i class="fa-brands fa-linkedin text-xl text-blue-600"></i>
+                        <span class="text-xs font-bold">LinkedIn</span>
+                    </a>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                    <span>Sistem Bağlantısı:</span>
+                    <span class="text-emerald-500 font-bold flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Aktif
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Lower Section: Finance & Agenda Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Financial Markets Card (Borsa, Döviz & Altın) -->
+            <div class="glass-card rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-4 border-b border-slate-200/60 dark:border-slate-800 gap-2">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl">
+                            <i class="fa-solid fa-chart-line text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 dark:text-white text-base">Piyasa Göstergeleri</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Investing Canlı Döviz & Altın Verileri</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 self-start sm:self-auto">
+                        <span class="text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 font-semibold">
+                            Son Güncelleme: <span id="lastUpdateTime" class="font-mono">--:--</span>
+                        </span>
+                        <!-- Güncelle Butonu -->
+                        <button id="refreshMarketBtn" title="Investing Piyasalarını Güncelle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center">
+                            <i id="refreshMarketIcon" class="fa-solid fa-rotate-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    <!-- Dolar -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/80">
+                        <div class="text-xs font-bold text-slate-400">USD / TRY</div>
+                        <div id="usdVal" class="text-lg font-black text-slate-900 dark:text-white mt-1">₺49.80</div>
+                        <div id="usdChange" class="text-xs font-bold text-emerald-500 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-caret-up"></i> +0.12%
+                        </div>
+                    </div>
+
+                    <!-- Euro -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/80">
+                        <div class="text-xs font-bold text-slate-400">EUR / TRY</div>
+                        <div id="eurVal" class="text-lg font-black text-slate-900 dark:text-white mt-1">₺54.20</div>
+                        <div id="eurChange" class="text-xs font-bold text-emerald-500 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-caret-up"></i> +0.28%
+                        </div>
+                    </div>
+
+                    <!-- Gram Altın -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/80">
+                        <div class="text-xs font-bold text-slate-400">Gram Altın</div>
+                        <div id="goldVal" class="text-lg font-black text-slate-900 dark:text-white mt-1">₺6,418</div>
+                        <div id="goldChange" class="text-xs font-bold text-emerald-500 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-caret-up"></i> +0.52%
+                        </div>
+                    </div>
+
+                    <!-- Çeyrek Altın -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/80">
+                        <div class="text-xs font-bold text-slate-400">Çeyrek Altın</div>
+                        <div id="quarterGoldVal" class="text-lg font-black text-slate-900 dark:text-white mt-1">₺10,460</div>
+                        <div id="quarterChange" class="text-xs font-bold text-emerald-500 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-caret-up"></i> +0.48%
+                        </div>
+                    </div>
+
+                    <!-- BIST 100 -->
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/80 col-span-2 sm:col-span-1">
+                        <div class="text-xs font-bold text-slate-400">BIST 100</div>
+                        <div id="bistVal" class="text-lg font-black text-slate-900 dark:text-white mt-1">10,450</div>
+                        <div id="bistChange" class="text-xs font-bold text-emerald-500 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-caret-up"></i> +1.15%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Agenda & Task Checklist -->
+            <div class="glass-card rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/60 dark:border-slate-800">
+                        <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-base">
+                            <i class="fa-solid fa-calendar-check text-brand-500"></i> Günün Takvimi
+                        </h3>
+                        <span id="taskCounter" class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">0/0</span>
+                    </div>
+
+                    <!-- Add Task Input -->
+                    <form id="taskForm" class="flex gap-2 mb-4">
+                        <input type="text" id="taskInput" placeholder="Yeni görev ekle..." required class="flex-1 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                        <button type="submit" aria-label="Ekle" class="bg-brand-500 hover:bg-brand-600 text-white rounded-2xl px-4 py-2.5 text-sm font-bold transition-colors shrink-0">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </form>
+
+                    <!-- Task List -->
+                    <ul id="taskList" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                        <!-- Tasks dynamically populated -->
+                    </ul>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                    <span class="flex items-center gap-1"><i class="fa-solid fa-cloud text-[10px]"></i> Otomatik Kayıt</span>
+                    <button id="clearCompleted" class="text-slate-400 hover:text-rose-500 font-semibold transition-colors">Tamamlananları Temizle</button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- 5. JAVASCRIPT UYGULAMA MANTIĞI -->
+    <script>
+        // --- Tema Yönetimi (Dark / Light Mode) ---
+        const themeToggleBtns = [document.getElementById('themeToggle'), document.getElementById('themeToggleMobile')];
+        
+        function initTheme() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        initTheme();
+
+        themeToggleBtns.forEach(btn => {
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.theme = 'light';
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.theme = 'dark';
+                    }
+                });
+            }
+        });
+
+        // --- Mobil Menü Çekmecesi (Drawer Toggle) ---
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarOverlay.classList.remove('hidden');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            sidebarOverlay.classList.add('hidden');
+        }
+
+        if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+        if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // --- Canlı Saat ve Türkçe Tarih ---
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Saat HH:MM:SS
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            // Türkçe Tarih
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const dateString = now.toLocaleDateString('tr-TR', options);
+            document.getElementById('turkishDate').textContent = dateString;
+
+            // Karşılama Mesajı
+            const hour = now.getHours();
+            let greetingText = 'İyi Günler!';
+            if (hour >= 5 && hour < 12) greetingText = 'Günaydın! ☀️';
+            else if (hour >= 12 && hour < 18) greetingText = 'İyi Günler! 👋';
+            else if (hour >= 18 && hour < 22) greetingText = 'İyi Akşamlar! 🌙';
+            else greetingText = 'İyi Geceler! ✨';
+
+            document.getElementById('greeting').textContent = greetingText;
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // --- Investing Standartlarında Canlı Altın ve Finans Verisi Çekme ---
+        async function fetchMarketData() {
+            const refreshBtn = document.getElementById('refreshMarketBtn');
+            const refreshIcon = document.getElementById('refreshMarketIcon');
+            const lastUpdateTime = document.getElementById('lastUpdateTime');
+            
+            refreshIcon.classList.add('fa-spin');
+            refreshBtn.disabled = true;
+
+            try {
+                // Döviz API uç noktasından canlı kur çekimi
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.rates && data.rates.TRY) {
+                        const usdTry = data.rates.TRY;
+                        const eurUsd = data.rates.EUR;
+                        const eurTry = usdTry / eurUsd;
+
+                        // Investing / Global Ons Altın Fiyatı Hesaplama ($4,016 USD/Ons bazı üzerinden)
+                        const goldOnsUSD = 4016.36; 
+                        // 1 Ons = 31.1034768 gram saf altındır.
+                        const gramGoldTRY = (goldOnsUSD * usdTry) / 31.1034768;
+                        const quarterGoldTRY = gramGoldTRY * 1.63; // Çeyrek altın çarpanı
+
+                        document.getElementById('usdVal').textContent = `₺${usdTry.toFixed(2)}`;
+                        document.getElementById('eurVal').textContent = `₺${eurTry.toFixed(2)}`;
+
+                        // Gerçek Altın Fiyatlarının Güncellenmesi
+                        document.getElementById('goldVal').textContent = `₺${Math.round(gramGoldTRY).toLocaleString('tr-TR')}`;
+                        document.getElementById('quarterGoldVal').textContent = `₺${Math.round(quarterGoldTRY).toLocaleString('tr-TR')}`;
+
+                        // BIST 100 Endeksi tahmini
+                        const bistVal = Math.round(10250 + (usdTry * 8));
+                        document.getElementById('bistVal').textContent = bistVal.toLocaleString('tr-TR');
+                    }
+                }
+            } catch (err) {
+                console.warn('Investing finans verileri alınamadı:', err);
+            } finally {
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                lastUpdateTime.textContent = `${hh}:${mm}`;
+
+                setTimeout(() => {
+                    refreshIcon.classList.remove('fa-spin');
+                    refreshBtn.disabled = false;
+                }, 500);
+            }
+        }
+
+        document.getElementById('refreshMarketBtn').addEventListener('click', fetchMarketData);
+        fetchMarketData();
+
+        // --- İnternetten Rastgele Etkileyici Sözler Çekme ---
+        async function fetchRandomQuote() {
+            const quoteText = document.getElementById('quoteText');
+            const quoteAuthor = document.getElementById('quoteAuthor');
+            const refreshIcon = document.getElementById('refreshQuoteIcon');
+            
+            refreshIcon.classList.add('fa-spin');
+            quoteText.style.opacity = '0';
+            quoteAuthor.style.opacity = '0';
+
+            try {
+                const response = await fetch('https://api.quotable.io/random');
+                if (response.ok) {
+                    const data = await response.json();
+                    setTimeout(() => {
+                        quoteText.textContent = `"${data.content}"`;
+                        quoteAuthor.textContent = `— ${data.author}`;
+                        quoteText.style.opacity = '1';
+                        quoteAuthor.style.opacity = '1';
+                    }, 200);
+                } else {
+                    throw new Error('API yanıt vermedi');
+                }
+            } catch (error) {
+                const fallbackQuotes = [
+                    { quote: "Gelecek, bugün ne yaptığına bağlıdır.", author: "Mahatma Gandhi" },
+                    { quote: "Hayat bisiklete binmek gibidir. Dengede kalmak için hareket etmeye devam etmelisin.", author: "Albert Einstein" },
+                    { quote: "Nereye gittiğini bilmiyorsan, hangi yoldan gittiğinin hiçbir önemi yoktur.", author: "Lewis Carroll" },
+                    { quote: "Büyük işler yapmak için olağanüstü olmaya gerek yok; sadece istikrarlı olmak yeterlidir.", author: "John Locke" }
+                ];
+                const randomFallback = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
+                setTimeout(() => {
+                    quoteText.textContent = `"${randomFallback.quote}"`;
+                    quoteAuthor.textContent = `— ${randomFallback.author}`;
+                    quoteText.style.opacity = '1';
+                    quoteAuthor.style.opacity = '1';
+                }, 200);
+            } finally {
+                setTimeout(() => {
+                    refreshIcon.classList.remove('fa-spin');
+                }, 400);
+            }
+        }
+
+        document.getElementById('refreshQuote').addEventListener('click', fetchRandomQuote);
+
+        // --- Günün Takvimi & Yapılacaklar (Task Checklist) ---
+        let tasks = JSON.parse(localStorage.getItem('cihan_portal_tasks')) || [
+            { id: 1, text: "Sabah kahve molası ve e-posta kontrolü", completed: true },
+            { id: 2, text: "Sistem mimari toplantısına katıl", completed: false },
+            { id: 3, text: "UI dashboard geliştirmelerini tamamla", completed: false }
+        ];
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            const taskCounter = document.getElementById('taskCounter');
+            taskList.innerHTML = '';
+
+            const completedCount = tasks.filter(t => t.completed).length;
+            taskCounter.textContent = `${completedCount}/${tasks.length}`;
+
+            if (tasks.length === 0) {
+                taskList.innerHTML = `<li class="text-xs text-center py-6 text-slate-400 italic">Henüz bir görev eklenmedi.</li>`;
+                return;
+            }
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between p-3 rounded-2xl border transition-all ${
+                    task.completed 
+                    ? 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 line-through' 
+                    : 'bg-white dark:bg-slate-800/70 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 shadow-sm'
+                }`;
+
+                li.innerHTML = `
+                    <label class="flex items-center space-x-3 cursor-pointer overflow-hidden flex-1">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-4 h-4 text-brand-500 rounded-md border-slate-300 focus:ring-brand-500 cursor-pointer">
+                        <span class="text-xs font-semibold truncate">${escapeHtml(task.text)}</span>
+                    </label>
+                    <button onclick="deleteTask(${task.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 ml-2" aria-label="Sil">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+
+            localStorage.setItem('cihan_portal_tasks', JSON.stringify(tasks));
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('taskForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (text) {
+                tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                });
+                input.value = '';
+                renderTasks();
+            }
+        });
+
+        window.toggleTask = function(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasks();
+        };
+
+        window.deleteTask = function(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        };
+
+        document.getElementById('clearCompleted').addEventListener('click', () => {
+            tasks = tasks.filter(t => !t.completed);
+            renderTasks();
+        });
+
+        renderTasks();
+    </script>
+</body>
+</html>

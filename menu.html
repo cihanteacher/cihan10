@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haftalık Yemek & Egzersiz Planlayıcı</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .timer-active {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased flex flex-col selection:bg-emerald-500 selection:text-white pt-24 sm:pt-28">
+
+    <!-- STRICTLY FIXED HEADER & QUICK NAVIGATION BAR -->
+    <div class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-md">
+        <!-- Main Header Bar -->
+        <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-sm sm:text-base leading-none">Yaşam Asistanı</h1>
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Yemek • Alışveriş • Evde Spor</p>
+                </div>
+            </div>
+            
+            <button id="reset-all-btn" class="inline-flex items-center space-x-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg font-medium transition" title="Tüm verileri sıfırla">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Sıfırla</span>
+            </button>
+        </header>
+
+        <!-- Fixed Navigation Buttons -->
+        <nav class="bg-slate-100/90 border-t border-slate-200/60 py-2">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-3 gap-2 sm:gap-4">
+                <a href="#menu-section" class="group flex items-center justify-center space-x-1.5 sm:space-x-2 bg-white hover:bg-emerald-600 hover:text-white border border-slate-200 text-slate-700 px-2 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm hover:shadow-md">
+                    <span class="w-5 h-5 rounded-md bg-emerald-100 group-hover:bg-emerald-500 group-hover:text-white text-emerald-700 flex items-center justify-center text-xs font-bold transition">1</span>
+                    <i data-lucide="utensils" class="w-4 h-4 text-emerald-600 group-hover:text-white transition hidden sm:inline"></i>
+                    <span class="truncate">Yemek Menüsü</span>
+                </a>
+
+                <a href="#shopping-section" class="group flex items-center justify-center space-x-1.5 sm:space-x-2 bg-white hover:bg-teal-600 hover:text-white border border-slate-200 text-slate-700 px-2 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm hover:shadow-md">
+                    <span class="w-5 h-5 rounded-md bg-teal-100 group-hover:bg-teal-500 group-hover:text-white text-teal-700 flex items-center justify-center text-xs font-bold transition">2</span>
+                    <i data-lucide="shopping-cart" class="w-4 h-4 text-teal-600 group-hover:text-white transition hidden sm:inline"></i>
+                    <span class="truncate">Alışveriş Listesi</span>
+                </a>
+
+                <a href="#workout-section" class="group flex items-center justify-center space-x-1.5 sm:space-x-2 bg-white hover:bg-indigo-600 hover:text-white border border-slate-200 text-slate-700 px-2 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm hover:shadow-md">
+                    <span class="w-5 h-5 rounded-md bg-indigo-100 group-hover:bg-indigo-500 group-hover:text-white text-indigo-700 flex items-center justify-center text-xs font-bold transition">3</span>
+                    <i data-lucide="activity" class="w-4 h-4 text-indigo-600 group-hover:text-white transition hidden sm:inline"></i>
+                    <span class="truncate">Egzersizler</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-12">
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 border border-slate-700">
+            <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+            <span id="toast-message" class="text-sm font-medium">İşlem başarılı!</span>
+        </div>
+
+        <!-- SECTION 1: HAFTALIK YEMEK MENÜSÜ -->
+        <section id="menu-section" class="scroll-mt-28">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <span class="text-xs font-bold tracking-wider text-emerald-600 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">1. Bölüm</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 flex items-center gap-2">
+                        Haftalık Yemek Menüsü
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">Haftalık 3 öğünlük beslenme planınızı hazırlayın veya hızlı önerileri kullanın.</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="quick-suggest-btn" class="bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition flex items-center space-x-2">
+                        <i data-lucide="wand2" class="w-4 h-4"></i>
+                        <span>Rastgele Menü Oluştur</span>
+                    </button>
+                    <button id="export-menu-btn" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-sm">
+                        <i data-lucide="download" class="w-4 h-4 text-slate-500"></i>
+                        <span>İndir (TXT)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Meal Plan Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4" id="days-container">
+                <!-- Day cards generated dynamically via JS -->
+            </div>
+        </section>
+
+        <!-- SECTION 2: HAFTALIK ALIŞVERİŞ LİSTESİ -->
+        <section id="shopping-section" class="scroll-mt-28 border-t border-slate-200/80 pt-10">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <span class="text-xs font-bold tracking-wider text-teal-600 uppercase bg-teal-50 px-3 py-1 rounded-full border border-teal-200">2. Bölüm</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 flex items-center gap-2">
+                        Haftalık Alışveriş Listesi
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">Eksiklerinizi yönetin, kategorilere göre düzenleyin ve menünüzden otomatik aktarın.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="sync-menu-ingredients-btn" class="bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition flex items-center space-x-2">
+                        <i data-lucide="sparkle" class="w-4 h-4"></i>
+                        <span>Menüden Liste Oluştur</span>
+                    </button>
+                    <button id="clear-bought-btn" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold px-3.5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-sm">
+                        <i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i>
+                        <span>Alınanları Temizle</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left: Add Item Form -->
+                <div class="lg:col-span-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Yeni Ürün Ekle</span>
+                    </h3>
+
+                    <form id="add-item-form" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Ürün Adı</label>
+                            <input type="text" id="item-name" required placeholder="Örn: Süt, Yumurta, Elma..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Miktar</label>
+                                <input type="text" id="item-qty" placeholder="Örn: 1 Litre, 2 Kilo" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">Kategori</label>
+                                <select id="item-category" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition">
+                                    <option value="Meyve & Sebze">🍎 Meyve & Sebze</option>
+                                    <option value="Süt & Şarküteri">🧀 Süt & Şarküteri</option>
+                                    <option value="Et & Balık">🥩 Et & Balık</option>
+                                    <option value="Kuru Gıda">🌾 Kuru & Temel Gıda</option>
+                                    <option value="İçecekler">🧃 İçecekler</option>
+                                    <option value="Diğer" selected>📦 Diğer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Listeye Ekle</span>
+                        </button>
+                    </form>
+
+                    <!-- Fast Add Chips -->
+                    <div class="pt-3 border-t border-slate-100">
+                        <span class="text-xs font-semibold text-slate-400 block mb-2">Hızlı Ekle:</span>
+                        <div class="flex flex-wrap gap-1.5" id="quick-chips">
+                            <button type="button" data-name="Yumurta" data-cat="Süt & Şarküteri" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Yumurta</button>
+                            <button type="button" data-name="Süt" data-cat="Süt & Şarküteri" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Süt</button>
+                            <button type="button" data-name="Ekmek" data-cat="Kuru Gıda" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Ekmek</button>
+                            <button type="button" data-name="Zeytinyağı" data-cat="Kuru Gıda" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Zeytinyağı</button>
+                            <button type="button" data-name="Domates" data-cat="Meyve & Sebze" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Domates</button>
+                            <button type="button" data-name="Tavuk Göğsü" data-cat="Et & Balık" class="quick-add-chip text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 px-2.5 py-1 rounded-lg transition font-medium">+ Tavuk Göğsü</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Shopping List View -->
+                <div class="lg:col-span-8 space-y-4">
+                    <!-- Filters & Stats Header -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <!-- Category Filter Buttons -->
+                        <div class="flex items-center space-x-1 overflow-x-auto pb-1 sm:pb-0 custom-scrollbar text-xs font-semibold" id="category-filters">
+                            <button data-cat="all" class="filter-btn active bg-slate-900 text-white px-3 py-1.5 rounded-lg transition whitespace-nowrap">Tümü</button>
+                            <button data-cat="Meyve & Sebze" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">🍎 Sebze/Meyve</button>
+                            <button data-cat="Süt & Şarküteri" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">🧀 Şarküteri</button>
+                            <button data-cat="Et & Balık" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">🥩 Et & Balık</button>
+                            <button data-cat="Kuru Gıda" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">🌾 Kuru Gıda</button>
+                            <button data-cat="İçecekler" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">🧃 İçecekler</button>
+                        </div>
+
+                        <!-- Progress indicator -->
+                        <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 min-w-max">
+                            <span id="shopping-progress-text">0/0 Alındı</span>
+                            <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                                <div id="shopping-progress-bar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Container -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[250px] p-2">
+                        <ul id="shopping-list" class="divide-y divide-slate-100">
+                            <!-- Items injected dynamically -->
+                        </ul>
+                        <div id="empty-shopping-state" class="hidden flex-col items-center justify-center py-12 text-center">
+                            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+                            </div>
+                            <h4 class="font-semibold text-slate-700 text-base">Alışveriş listeniz boş</h4>
+                            <p class="text-xs text-slate-400 mt-1 max-w-xs">Sol taraftaki formdan ürün ekleyebilir veya yemek menünüzden otomatik oluşturabilirsiniz.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: EVDE ALETSİZ EGZERSİZLER -->
+        <section id="workout-section" class="scroll-mt-32 border-t border-slate-200/80 pt-10 pb-12">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+                <div>
+                    <span class="text-xs font-bold tracking-wider text-indigo-600 uppercase bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">3. Bölüm</span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2 flex items-center gap-2">
+                        Evde Aletsiz Egzersizler
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">Ekipman gerektirmeyen vücut ağırlığı hareketleri, Zamanlayıcı ve Kronometre.</p>
+                </div>
+
+                <!-- Dual Timer & Stopwatch Panel -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full lg:w-auto">
+                    <!-- Global Workout Countdown Timer -->
+                    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-lg border border-indigo-900/40 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-indigo-300 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="timer" class="w-4 h-4 text-indigo-400"></i> Zamanlayıcı
+                            </span>
+                            <span id="global-timer-display" class="font-mono font-bold text-xl text-emerald-400">00:00</span>
+                        </div>
+                        <div class="flex items-center space-x-2 pt-1">
+                            <button id="timer-start-btn" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-1.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1">
+                                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                                <span>Başlat</span>
+                            </button>
+                            <button id="timer-reset-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                                Sıfırla
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Stopwatch (Kronometre) -->
+                    <div class="bg-gradient-to-r from-slate-900 to-slate-950 text-white p-4 rounded-2xl shadow-lg border border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="watch" class="w-4 h-4 text-amber-400"></i> Kronometre
+                            </span>
+                            <span id="stopwatch-display" class="font-mono font-bold text-xl text-amber-300">00:00.<span class="text-sm">00</span></span>
+                        </div>
+                        <div class="flex items-center space-x-1.5 pt-1">
+                            <button id="stopwatch-start-btn" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-1.5 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1">
+                                <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                                <span>Başlat</span>
+                            </button>
+                            <button id="stopwatch-lap-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1">
+                                <i data-lucide="flag" class="w-3 h-3"></i>
+                                <span>Tur</span>
+                            </button>
+                            <button id="stopwatch-reset-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition">
+                                Sıfırla
+                            </button>
+                        </div>
+                        <!-- Lap Times Container -->
+                        <div id="stopwatch-laps" class="hidden text-[11px] font-mono text-slate-400 max-h-16 overflow-y-auto custom-scrollbar border-t border-slate-800 pt-1 space-y-0.5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercises Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="workout-cards-container">
+                <!-- Workout Cards dynamically populated -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p>© 2026 Haftalık Yaşam Planlayıcı. Tüm veriler cihazınızda güvenle saklanır.</p>
+            <div class="flex items-center space-x-4 text-slate-400">
+                <span class="flex items-center space-x-1"><i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i> <span>Çevrimdışı Çalışır</span></span>
+                <span class="flex items-center space-x-1"><i data-lucide="heart" class="w-4 h-4 text-rose-500"></i> <span>Sağlıklı Yaşam</span></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA & INITIAL STATES ---
+        const DAYS_OF_WEEK = [
+            { id: 'pazartesi', name: 'Pazartesi' },
+            { id: 'sali', name: 'Salı' },
+            { id: 'carsamba', name: 'Çarşamba' },
+            { id: 'persembe', name: 'Perşembe' },
+            { id: 'cuma', name: 'Cuma' },
+            { id: 'cumartesi', name: 'Cumartesi' },
+            { id: 'pazar', name: 'Pazar' }
+        ];
+
+        const SAMPLE_MEALS = {
+            kahvalti: ['Yulaf Ezmesi & Meyve', 'Menemen & Tam Buğday Ekmek', 'Omlet & Avokado', 'Haşlanmış Yumurta & Peynir', 'Peynirli Tost & Yeşillik', 'Krep & Fıstık Ezmesi', 'Klasik Türk Kahvaltısı'],
+            ogle: ['Tavuklu Izgara Salata', 'Mercimek Çorbası & Makarna', 'Zeytinyağlı Taze Fasulye', 'Köfte & Pirinç Pilavı', 'Tuna Salata & Kuruyemiş', 'Sebzeli Noodle', 'Fırın Somon & Patates'],
+            aksam: ['Izgara Somon & Buğulama Sebze', 'Zeytinyağlı Enginar & Yoğurt', 'Fırın Tavuk & Brokoli', 'Kuru Fasulye & Bulgur Pilavı', 'Etli Mantar Sote', 'Sebzeli Güveç', 'Mercimek Köftesi & Marul']
+        };
+
+        const EXERCISES = [
+            {
+                id: 'pushup',
+                name: 'Şınav (Push-up)',
+                category: 'Üst Vücut',
+                reps: '3 Set x 12-15 Tekrar',
+                muscle: 'Göğüs, Omuz, Triceps, Core',
+                description: 'Ellerinizi omuz genişliğinde açarak göğsünüzü yere yaklaştırın ve vücut çizginizi bozmadan yukarı itin.',
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="95" x2="180" y2="95" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="55" r="10" fill="#0d9488"/>
+                    <line x1="50" y1="65" x2="110" y2="70" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+                    <line x1="110" y1="70" x2="160" y2="90" stroke="#0f766e" stroke-width="7" stroke-linecap="round"/>
+                    <polyline points="65,66 60,95" stroke="#047857" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="160" cy="90" r="4" fill="#1e293b"/>
+                </svg>`
+            },
+            {
+                id: 'squat',
+                name: 'Vücut Ağırlığı Squat',
+                category: 'Alt Vücut',
+                reps: '4 Set x 15 Tekrar',
+                muscle: 'Quads, Glutes, Hamstring',
+                description: 'Ayaklarınızı omuz kalça genişliğinde açın. Görünmez bir sandalyeye oturur gibi kalçanızı geriye vererek çökün.',
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="105" x2="180" y2="105" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="85" cy="35" r="10" fill="#0d9488"/>
+                    <line x1="85" y1="45" x2="70" y2="70" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+                    <line x1="70" y1="70" x2="90" y2="105" stroke="#0f766e" stroke-width="7" stroke-linecap="round"/>
+                    <line x1="80" y1="50" x2="130" y2="45" stroke="#047857" stroke-width="6" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 'plank',
+                name: 'Plank (Statik Duruş)',
+                category: 'Core / Karın',
+                reps: '3 Set x 45-60 Saniye',
+                muscle: 'Tüm Karın (Core), Bel, Omuz',
+                description: 'Dirsekleriniz ve ayak parmak uçlarınız üzerinde düz bir hat oluşturun. Karın kaslarınızı sıkılı tutun.',
+                isTimer: true,
+                defaultSeconds: 45,
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="95" x2="180" y2="95" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="45" cy="65" r="10" fill="#0d9488"/>
+                    <line x1="45" y1="72" x2="120" y2="72" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+                    <line x1="120" y1="72" x2="165" y2="92" stroke="#0f766e" stroke-width="7" stroke-linecap="round"/>
+                    <polyline points="55,72 55,95 70,95" stroke="#047857" stroke-width="6" stroke-linecap="round" fill="none"/>
+                </svg>`
+            },
+            {
+                id: 'lunge',
+                name: 'Ters Lunge (Adımlama)',
+                category: 'Alt Vücut',
+                reps: '3 Set x 12 Tekrar (Her bacak)',
+                muscle: 'Kalça, Ön & Arka Bacak',
+                description: 'Bir bacağınızla geriye büyük bir adım atın ve her iki diziniz yaklaşık 90 derece bükülene kadar alçalın.',
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="105" x2="180" y2="105" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="100" cy="30" r="10" fill="#0d9488"/>
+                    <line x1="100" y1="40" x2="100" y2="65" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+                    <polyline points="100,65 125,70 125,105" stroke="#0f766e" stroke-width="7" fill="none" stroke-linecap="round"/>
+                    <polyline points="100,65 65,80 65,105" stroke="#047857" stroke-width="7" fill="none" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 'glutebridge',
+                name: 'Glute Bridge (Kalça Kaldırma)',
+                category: 'Kalça / Bel',
+                reps: '3 Set x 15-20 Tekrar',
+                muscle: 'Glutes, Hamstrings, Bel',
+                description: 'Sırtüstü yatıp dizlerinizi bükün. Topuklarınızdan destek alarak kalçanızı tavan yönünde yukarı kaldırın.',
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="95" x2="180" y2="95" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="45" cy="85" r="10" fill="#0d9488"/>
+                    <polyline points="45,88 90,60 135,95" stroke="#0f766e" stroke-width="8" fill="none" stroke-linecap="round"/>
+                    <line x1="135" y1="95" x2="150" y2="95" stroke="#047857" stroke-width="6" stroke-linecap="round"/>
+                </svg>`
+            },
+            {
+                id: 'mountainclimber',
+                name: 'Mountain Climbers',
+                category: 'Kardiyo / Core',
+                reps: '3 Set x 40 Saniye',
+                muscle: 'Tüm Vücut, Karın, Kalp Nabzı',
+                description: 'Şınav pozisyonu alın ve dizlerinizi sırayla tempolu bir şekilde göğsünüze doğru çekip itin.',
+                svg: `<svg viewBox="0 0 200 120" class="w-full h-32 object-contain">
+                    <rect width="200" height="120" fill="#f8fafc" rx="12"/>
+                    <line x1="20" y1="95" x2="180" y2="95" stroke="#cbd5e1" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="50" r="10" fill="#0d9488"/>
+                    <line x1="50" y1="60" x2="110" y2="70" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+                    <polyline points="110,70 80,85 90,95" stroke="#0f766e" stroke-width="7" fill="none" stroke-linecap="round"/>
+                    <line x1="110" y1="70" x2="160" y2="95" stroke="#047857" stroke-width="7" stroke-linecap="round"/>
+                    <line x1="65" y1="63" x2="60" y2="95" stroke="#047857" stroke-width="6" stroke-linecap="round"/>
+                </svg>`
+            }
+        ];
+
+        // State Storage
+        let mealPlanData = {};
+        let shoppingListData = [];
+        let activeCategoryFilter = 'all';
+
+        // Timer States
+        let globalTimerInterval = null;
+        let globalTimerSeconds = 0;
+        let globalTimerRunning = false;
+
+        // Stopwatch States
+        let stopwatchInterval = null;
+        let stopwatchStartTime = 0;
+        let stopwatchElapsedTime = 0;
+        let stopwatchRunning = false;
+        let stopwatchLaps = [];
+
+        function initData() {
+            const savedMeals = localStorage.getItem('app_meal_plan');
+            if (savedMeals) {
+                try { mealPlanData = JSON.parse(savedMeals); } catch(e) { mealPlanData = {}; }
+            } else {
+                DAYS_OF_WEEK.forEach(day => {
+                    mealPlanData[day.id] = { kahvalti: '', ogle: '', aksam: '' };
+                });
+            }
+
+            const savedShopping = localStorage.getItem('app_shopping_list');
+            if (savedShopping) {
+                try { shoppingListData = JSON.parse(savedShopping); } catch(e) { shoppingListData = []; }
+            } else {
+                shoppingListData = [
+                    { id: 1, name: 'Yumurta', category: 'Süt & Şarküteri', quantity: '10 Adet', completed: false },
+                    { id: 2, name: 'Yulaf Ezmesi', category: 'Kuru Gıda', quantity: '1 Paket', completed: false },
+                    { id: 3, name: 'Tavuk Göğsü', category: 'Et & Balık', quantity: '1 Kg', completed: false },
+                    { id: 4, name: 'Elma & Muz', category: 'Meyve & Sebze', quantity: '1 Kilo', completed: true }
+                ];
+            }
+        }
+
+        function saveMealPlan() {
+            localStorage.setItem('app_meal_plan', JSON.stringify(mealPlanData));
+        }
+
+        function saveShoppingList() {
+            localStorage.setItem('app_shopping_list', JSON.stringify(shoppingListData));
+        }
+
+        // --- RENDER MEAL PLANNER ---
+        function renderMealPlanner() {
+            const container = document.getElementById('days-container');
+            container.innerHTML = '';
+
+            DAYS_OF_WEEK.forEach(day => {
+                const dayData = mealPlanData[day.id] || { kahvalti: '', ogle: '', aksam: '' };
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-col justify-between hover:border-emerald-300 transition duration-200';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                ${day.name}
+                            </h3>
+                            <button class="clear-day-btn text-slate-400 hover:text-rose-500 text-xs transition" data-day="${day.id}" title="${day.name} gününü temizle">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-emerald-700 mb-1 flex items-center justify-between">
+                                    <span>🍳 Kahvaltı</span>
+                                </label>
+                                <input type="text" data-day="${day.id}" data-meal="kahvalti" value="${escapeHtml(dayData.kahvalti || '')}" 
+                                    placeholder="Kahvaltı ekle..." 
+                                    class="meal-input w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-teal-700 mb-1 flex items-center justify-between">
+                                    <span>🥗 Öğle Yemeği</span>
+                                </label>
+                                <input type="text" data-day="${day.id}" data-meal="ogle" value="${escapeHtml(dayData.ogle || '')}" 
+                                    placeholder="Öğle yemeği ekle..." 
+                                    class="meal-input w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-indigo-700 mb-1 flex items-center justify-between">
+                                    <span>🍲 Akşam Yemeği</span>
+                                </label>
+                                <input type="text" data-day="${day.id}" data-meal="aksam" value="${escapeHtml(dayData.aksam || '')}" 
+                                    placeholder="Akşam yemeği ekle..." 
+                                    class="meal-input w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Input listener
+            document.querySelectorAll('.meal-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const day = e.target.dataset.day;
+                    const meal = e.target.dataset.meal;
+                    if (!mealPlanData[day]) mealPlanData[day] = {};
+                    mealPlanData[day][meal] = e.target.value;
+                    saveMealPlan();
+                });
+            });
+
+            // Clear day listener
+            document.querySelectorAll('.clear-day-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const day = e.currentTarget.dataset.day;
+                    mealPlanData[day] = { kahvalti: '', ogle: '', aksam: '' };
+                    saveMealPlan();
+                    renderMealPlanner();
+                    showToast('Günün menüsü temizlendi.');
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- RENDER SHOPPING LIST ---
+        function renderShoppingList() {
+            const listEl = document.getElementById('shopping-list');
+            const emptyEl = document.getElementById('empty-shopping-state');
+            listEl.innerHTML = '';
+
+            const filteredItems = shoppingListData.filter(item => {
+                if (activeCategoryFilter === 'all') return true;
+                return item.category === activeCategoryFilter;
+            });
+
+            if (filteredItems.length === 0) {
+                emptyEl.classList.remove('hidden');
+                emptyEl.classList.add('flex');
+            } else {
+                emptyEl.classList.add('hidden');
+                emptyEl.classList.remove('flex');
+            }
+
+            filteredItems.forEach(item => {
+                const li = document.createElement('li');
+                li.className = `p-3 flex items-center justify-between transition group hover:bg-slate-50 ${item.completed ? 'bg-slate-50/60' : ''}`;
+                li.innerHTML = `
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <button class="toggle-item-btn w-5 h-5 rounded-md border ${item.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white hover:border-emerald-500'} flex items-center justify-center transition flex-shrink-0" data-id="${item.id}">
+                            ${item.completed ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+                        </button>
+                        <div class="truncate">
+                            <span class="text-sm font-medium ${item.completed ? 'line-through text-slate-400' : 'text-slate-800'} block truncate">
+                                ${escapeHtml(item.name)}
+                            </span>
+                            <div class="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
+                                <span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">${escapeHtml(item.category)}</span>
+                                ${item.quantity ? `<span>• ${escapeHtml(item.quantity)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="delete-item-btn text-slate-300 hover:text-rose-500 p-1 rounded-lg transition opacity-80 group-hover:opacity-100" data-id="${item.id}" title="Sil">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                listEl.appendChild(li);
+            });
+
+            // Update Progress bar & text
+            const total = shoppingListData.length;
+            const completed = shoppingListData.filter(i => i.completed).length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            document.getElementById('shopping-progress-text').innerText = `${completed}/${total} Alındı (%${percentage})`;
+            document.getElementById('shopping-progress-bar').style.width = `${percentage}%`;
+
+            // Listeners
+            document.querySelectorAll('.toggle-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.dataset.id);
+                    const item = shoppingListData.find(i => i.id === id);
+                    if (item) {
+                        item.completed = !item.completed;
+                        saveShoppingList();
+                        renderShoppingList();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.dataset.id);
+                    shoppingListData = shoppingListData.filter(i => i.id !== id);
+                    saveShoppingList();
+                    renderShoppingList();
+                    showToast('Ürün silindi.');
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- RENDER WORKOUTS ---
+        function renderWorkouts() {
+            const container = document.getElementById('workout-cards-container');
+            container.innerHTML = '';
+
+            EXERCISES.forEach(ex => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition duration-200 border-t-4 border-t-indigo-500';
+                card.innerHTML = `
+                    <div class="p-5 space-y-3">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">${ex.category}</span>
+                                <h3 class="font-bold text-slate-900 text-lg mt-1">${ex.name}</h3>
+                            </div>
+                            <span class="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200">${ex.reps}</span>
+                        </div>
+
+                        <!-- SVG Illustration Visual -->
+                        <div class="py-2 flex justify-center bg-slate-50/70 rounded-xl border border-slate-100 overflow-hidden">
+                            ${ex.svg}
+                        </div>
+
+                        <p class="text-xs text-slate-600 leading-relaxed">${ex.description}</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-1.5 text-slate-500 truncate max-w-[180px]">
+                            <i data-lucide="target" class="w-4 h-4 text-indigo-500 flex-shrink-0"></i>
+                            <span class="truncate font-medium">${ex.muscle}</span>
+                        </div>
+
+                        ${ex.isTimer ? `
+                            <button class="start-plank-timer bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-xl transition flex items-center space-x-1 shadow-sm" data-seconds="${ex.defaultSeconds}">
+                                <i data-lucide="timer" class="w-3.5 h-3.5"></i>
+                                <span>Zamanlayıcı (${ex.defaultSeconds}s)</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.querySelectorAll('.start-plank-timer').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const secs = parseInt(e.currentTarget.dataset.seconds);
+                    startGlobalTimer(secs);
+                    document.getElementById('workout-section').scrollIntoView({ behavior: 'smooth' });
+                    showToast(`${secs} Saniyelik Zamanlayıcı Başlatıldı!`);
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        // --- STOPWATCH (KRONOMETRE) LOGIC ---
+        function formatStopwatchTime(ms) {
+            const minutes = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            const hundredths = Math.floor((ms % 1000) / 10);
+            
+            const minStr = minutes.toString().padStart(2, '0');
+            const secStr = seconds.toString().padStart(2, '0');
+            const hundStr = hundredths.toString().padStart(2, '0');
+
+            return `${minStr}:${secStr}.<span class="text-sm">${hundStr}</span>`;
+        }
+
+        function updateStopwatchDisplay() {
+            document.getElementById('stopwatch-display').innerHTML = formatStopwatchTime(stopwatchElapsedTime);
+        }
+
+        document.getElementById('stopwatch-start-btn').addEventListener('click', () => {
+            const btn = document.getElementById('stopwatch-start-btn');
+            if (!stopwatchRunning) {
+                stopwatchRunning = true;
+                stopwatchStartTime = Date.now() - stopwatchElapsedTime;
+                stopwatchInterval = setInterval(() => {
+                    stopwatchElapsedTime = Date.now() - stopwatchStartTime;
+                    updateStopwatchDisplay();
+                }, 10);
+                btn.className = "flex-1 bg-rose-500 hover:bg-rose-600 text-white py-1.5 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1";
+                btn.innerHTML = `<i data-lucide="pause" class="w-3.5 h-3.5 fill-current"></i><span>Durdur</span>`;
+            } else {
+                stopwatchRunning = false;
+                clearInterval(stopwatchInterval);
+                btn.className = "flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-1.5 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1";
+                btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Devam Et</span>`;
+            }
+            lucide.createIcons();
+        });
+
+        document.getElementById('stopwatch-lap-btn').addEventListener('click', () => {
+            if (stopwatchElapsedTime > 0) {
+                stopwatchLaps.unshift(stopwatchElapsedTime);
+                renderStopwatchLaps();
+                showToast(`Tur ${stopwatchLaps.length} kaydedildi.`);
+            }
+        });
+
+        document.getElementById('stopwatch-reset-btn').addEventListener('click', () => {
+            stopwatchRunning = false;
+            clearInterval(stopwatchInterval);
+            stopwatchElapsedTime = 0;
+            stopwatchLaps = [];
+            updateStopwatchDisplay();
+            renderStopwatchLaps();
+
+            const btn = document.getElementById('stopwatch-start-btn');
+            btn.className = "flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-1.5 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1";
+            btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Başlat</span>`;
+            lucide.createIcons();
+        });
+
+        function renderStopwatchLaps() {
+            const lapsContainer = document.getElementById('stopwatch-laps');
+            if (stopwatchLaps.length === 0) {
+                lapsContainer.classList.add('hidden');
+                lapsContainer.innerHTML = '';
+            } else {
+                lapsContainer.classList.remove('hidden');
+                lapsContainer.innerHTML = stopwatchLaps.map((lapMs, idx) => {
+                    const lapNum = stopwatchLaps.length - idx;
+                    return `<div class="flex justify-between items-center px-1">
+                        <span>Tur ${lapNum}:</span>
+                        <span class="text-amber-300 font-bold">${formatStopwatchTime(lapMs)}</span>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // --- TIMER FUNCTIONALITY ---
+        function updateTimerDisplay() {
+            const mins = Math.floor(globalTimerSeconds / 60);
+            const secs = globalTimerSeconds % 60;
+            const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('global-timer-display').innerText = display;
+        }
+
+        function startGlobalTimer(seconds) {
+            if (seconds) globalTimerSeconds = seconds;
+            if (globalTimerRunning) clearInterval(globalTimerInterval);
+
+            globalTimerRunning = true;
+            updateTimerDisplay();
+
+            const startBtn = document.getElementById('timer-start-btn');
+            startBtn.innerHTML = `<i data-lucide="pause" class="w-3.5 h-3.5 fill-current"></i><span>Durdur</span>`;
+            lucide.createIcons();
+
+            globalTimerInterval = setInterval(() => {
+                if (globalTimerSeconds > 0) {
+                    globalTimerSeconds--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(globalTimerInterval);
+                    globalTimerRunning = false;
+                    startBtn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Başlat</span>`;
+                    lucide.createIcons();
+                    showToast('⏰ Zaman doldu! Egzersiz seti tamamlandı!');
+                }
+            }, 1000);
+        }
+
+        function pauseGlobalTimer() {
+            clearInterval(globalTimerInterval);
+            globalTimerRunning = false;
+            const startBtn = document.getElementById('timer-start-btn');
+            startBtn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Devam Et</span>`;
+            lucide.createIcons();
+        }
+
+        document.getElementById('timer-start-btn').addEventListener('click', () => {
+            if (globalTimerRunning) {
+                pauseGlobalTimer();
+            } else {
+                if (globalTimerSeconds <= 0) globalTimerSeconds = 60;
+                startGlobalTimer();
+            }
+        });
+
+        document.getElementById('timer-reset-btn').addEventListener('click', () => {
+            clearInterval(globalTimerInterval);
+            globalTimerRunning = false;
+            globalTimerSeconds = 0;
+            updateTimerDisplay();
+            const startBtn = document.getElementById('timer-start-btn');
+            startBtn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>Başlat</span>`;
+            lucide.createIcons();
+        });
+
+        // --- EVENT HANDLERS ---
+        // Add item form submit
+        document.getElementById('add-item-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('item-name').value.trim();
+            const qty = document.getElementById('item-qty').value.trim();
+            const cat = document.getElementById('item-category').value;
+
+            if (!name) return;
+
+            shoppingListData.unshift({
+                id: Date.now(),
+                name: name,
+                quantity: qty,
+                category: cat,
+                completed: false
+            });
+
+            saveShoppingList();
+            renderShoppingList();
+            document.getElementById('add-item-form').reset();
+            showToast(`'${name}' alışveriş listesine eklendi.`);
+        });
+
+        // Quick add chips
+        document.querySelectorAll('.quick-add-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                const name = e.target.dataset.name;
+                const cat = e.target.dataset.cat;
+
+                shoppingListData.unshift({
+                    id: Date.now(),
+                    name: name,
+                    quantity: '1 Paket/Adet',
+                    category: cat,
+                    completed: false
+                });
+
+                saveShoppingList();
+                renderShoppingList();
+                showToast(`'${name}' listeye eklendi.`);
+            });
+        });
+
+        // Category Filter Buttons
+        document.querySelectorAll('#category-filters button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#category-filters button').forEach(b => {
+                    b.className = 'filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap';
+                });
+                e.currentTarget.className = 'filter-btn active bg-slate-900 text-white px-3 py-1.5 rounded-lg transition whitespace-nowrap';
+                activeCategoryFilter = e.currentTarget.dataset.cat;
+                renderShoppingList();
+            });
+        });
+
+        // Sync menu ingredients to shopping list
+        document.getElementById('sync-menu-ingredients-btn').addEventListener('click', () => {
+            let addedCount = 0;
+            DAYS_OF_WEEK.forEach(day => {
+                const dayData = mealPlanData[day.id];
+                if (dayData) {
+                    ['kahvalti', 'ogle', 'aksam'].forEach(mealType => {
+                        const val = dayData[mealType];
+                        if (val && val.trim().length > 0) {
+                            const exists = shoppingListData.some(item => item.name.toLowerCase() === val.trim().toLowerCase());
+                            if (!exists) {
+                                shoppingListData.push({
+                                    id: Date.now() + Math.random(),
+                                    name: val.trim(),
+                                    quantity: 'Menüden Aktarıldı',
+                                    category: 'Diğer',
+                                    completed: false
+                                });
+                                addedCount++;
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (addedCount > 0) {
+                saveShoppingList();
+                renderShoppingList();
+                showToast(`${addedCount} adet öğün içeriği alışveriş listenize eklendi!`);
+            } else {
+                showToast('Menünüzde aktarılacak yeni bir öğün bulunamadı.');
+            }
+        });
+
+        // Clear bought items
+        document.getElementById('clear-bought-btn').addEventListener('click', () => {
+            const count = shoppingListData.filter(i => i.completed).length;
+            if (count > 0) {
+                shoppingListData = shoppingListData.filter(i => !i.completed);
+                saveShoppingList();
+                renderShoppingList();
+                showToast(`${count} adet tamamlanmış ürün temizlendi.`);
+            } else {
+                showToast('Temizlenecek tamamlanmış ürün yok.');
+            }
+        });
+
+        // Quick suggest random meals
+        document.getElementById('quick-suggest-btn').addEventListener('click', () => {
+            DAYS_OF_WEEK.forEach(day => {
+                const randomKahvalti = SAMPLE_MEALS.kahvalti[Math.floor(Math.random() * SAMPLE_MEALS.kahvalti.length)];
+                const randomOgle = SAMPLE_MEALS.ogle[Math.floor(Math.random() * SAMPLE_MEALS.ogle.length)];
+                const randomAksam = SAMPLE_MEALS.aksam[Math.floor(Math.random() * SAMPLE_MEALS.aksam.length)];
+
+                mealPlanData[day.id] = {
+                    kahvalti: randomKahvalti,
+                    ogle: randomOgle,
+                    aksam: randomAksam
+                };
+            });
+
+            saveMealPlan();
+            renderMealPlanner();
+            showToast('Haftalık sağlıklı menü otomatik oluşturuldu!');
+        });
+
+        // Export menu as TXT
+        document.getElementById('export-menu-btn').addEventListener('click', () => {
+            let content = "=== HAFTALIK YEMEK MENÜSÜ ===\n\n";
+            DAYS_OF_WEEK.forEach(day => {
+                const data = mealPlanData[day.id] || {};
+                content += `[ ${day.name.toUpperCase()} ]\n`;
+                content += ` • Kahvaltı: ${data.kahvalti || '-'}\n`;
+                content += ` • Öğle: ${data.ogle || '-'}\n`;
+                content += ` • Akşam: ${data.aksam || '-'}\n\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'haftalik_yemek_menusu.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Menü TXT olarak indirildi!');
+        });
+
+        // Reset all data
+        document.getElementById('reset-all-btn').addEventListener('click', () => {
+            localStorage.removeItem('app_meal_plan');
+            localStorage.removeItem('app_shopping_list');
+            initData();
+            renderMealPlanner();
+            renderShoppingList();
+            showToast('Tüm veriler varsayılana sıfırlandı.');
+        });
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-message');
+            msgEl.innerText = msg;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Utility: Escape HTML
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // --- APP INIT ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initData();
+            renderMealPlanner();
+            renderShoppingList();
+            renderWorkouts();
+        });
+    </script>
+</body>
+</html>
