@@ -474,8 +474,8 @@
                         </button>
                     </form>
 
-                    <!-- Görev Listesi -->
-                    <ul id="taskList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    <!-- Görev Listesi (5 Madde Boyutunda, Fazlası İçin Kaydırma Çubuğu) -->
+                    <ul id="taskList" class="space-y-2 max-h-[230px] overflow-y-auto pr-1">
                         <!-- Javascript ile yüklenecek -->
                     </ul>
                 </div>
@@ -827,7 +827,7 @@
 
         renderCalendar();
 
-        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU (TARAYICI BELLEĞİ YOK) ---
+        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU ---
         const BIN_ID = "6ae24191ac6210605a59fcea";
         const API_KEY = "$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq";
 
@@ -975,6 +975,14 @@
         }
 
         fetchTasksFromCloud();
+
+        // Cihazlar arası anlık senkronizasyon için sayfa odaklandığında veya her 5 saniyede bir buluttan tazele
+        window.addEventListener('focus', () => {
+            fetchTasksFromCloud();
+        });
+        setInterval(() => {
+            fetchTasksFromCloud();
+        }, 5000);
     </script>
 </body>
 </html>
