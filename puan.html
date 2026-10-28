@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınıf İçi Puan Takip Uygulaması</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- QRCode.js for generating QR codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col" x-data="classApp()" x-init="initApp()">
+
+    <!-- CLASS SELECTION OVERLAY (Blurred background when no class is selected) -->
+    <div x-show="!activeClassId" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-xl p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
+                <i class="fa-solid fa-school"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Sınıf Seçin veya Oluşturun</h2>
+            <p class="text-xs text-slate-500 mb-6">Puan takibi yapmak istediğiniz sınıfı seçin ya da yeni bir sınıf ekleyin.</p>
+
+            <!-- Classes Grid -->
+            <div class="space-y-3 mb-6 max-h-60 overflow-y-auto pr-1">
+                <template x-if="classes.length === 0">
+                    <div class="py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        Henüz kayıtlı bir sınıf bulunmuyor. Aşağıdan yeni sınıf ekleyebilirsiniz.
+                    </div>
+                </template>
+                <template x-for="cls in classes" :key="cls.id">
+                    <div @click="selectClass(cls.id)" class="flex items-center justify-between p-4 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-2xl cursor-pointer transition-all group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow-sm group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="font-bold text-slate-800 group-hover:text-indigo-900" x-text="cls.name"></h4>
+                                <span class="text-xs text-slate-400"><span x-text="cls.students ? cls.students.length : 0"></span> Öğrenci</span>
+                            </div>
+                        </div>
+                        <div class="text-indigo-600 font-semibold text-sm flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                            Seç <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Create New Class Form -->
+            <form @submit.prevent="createClassFromModal()" class="flex gap-2">
+                <input type="text" x-model="newClassNameModal" placeholder="Yeni Sınıf Adı (Örn: 9-A, 10-B)" required
+                       class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Sınıf Ekle
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-amber-300"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold tracking-tight">Akıllı Sınıf Puan Sistemi</h1>
+                        <span class="bg-white/20 text-amber-200 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-white/20" x-text="currentClass ? currentClass.name : ''"></span>
+                    </div>
+                    <p class="text-indigo-200 text-sm">Öğrenci katılım ve davranış yönetim paneli</p>
+                </div>
+            </div>
+
+            <!-- Header Right Controls -->
+            <div class="flex items-center gap-3">
+                <!-- Lock Screen Button -->
+                <button @click="lockApp()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-sm font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2" title="Ekranı Kilitle">
+                    <i class="fa-solid fa-lock"></i>
+                    <span class="hidden sm:inline">Kilitle</span>
+                </button>
+
+                <!-- Fullscreen Button -->
+                <button @click="toggleFullscreen()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-sm font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2" :title="isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekran Yap'">
+                    <i :class="isFullscreen ? 'fa-solid fa-compress' : 'fa-solid fa-expand'"></i>
+                    <span class="hidden sm:inline" x-text="isFullscreen ? 'Küçült' : 'Tam Ekran'"></span>
+                </button>
+
+                <button @click="exitClass()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-right-left"></i> Sınıf Değiştir
+                </button>
+
+                <!-- Quick Stats -->
+                <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-sm">
+                    <div class="text-center px-2 border-r border-white/20">
+                        <span class="block text-indigo-200 text-[10px] font-medium">Öğrenci</span>
+                        <span class="font-bold text-base" x-text="students.length">0</span>
+                    </div>
+                    <div class="text-center px-2">
+                        <span class="block text-indigo-200 text-[10px] font-medium">Toplam</span>
+                        <span class="font-bold text-base text-amber-300" x-text="totalScoreSum()">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex-grow w-full" x-show="activeClassId" x-cloak>
+
+        <!-- Navigation Tabs & Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+            <!-- Tabs -->
+            <div class="flex flex-wrap bg-slate-100 p-1 rounded-xl w-full sm:w-auto gap-1">
+                <button @click="activeTab = 'students'" 
+                        :class="activeTab === 'students' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-users"></i> Sınıf Paneli
+                </button>
+                <button @click="activeTab = 'stats'" 
+                        :class="activeTab === 'stats' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Haftalık/Aylık Rapor
+                </button>
+                <button @click="activeTab = 'history'" 
+                        :class="activeTab === 'history' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> İşlem Geçmişi
+                </button>
+                <button @click="activeTab = 'management'" 
+                        :class="activeTab === 'management' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
+                        class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-user-gear"></i> Öğrenci & Sınıf Yönetimi
+                </button>
+            </div>
+
+            <!-- Global Action Buttons -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button @click="resetScoresModal = true" class="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all border border-amber-200 flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Puanları Sıfırla
+                </button>
+                <button @click="clearAllModal = true" class="px-4 py-2 text-sm font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-all border border-rose-200 flex items-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Sınıfı Temizle
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 1: STUDENTS GRID -->
+        <div x-show="activeTab === 'students'" x-cloak>
+            <!-- Search & Filter bar -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" x-model="searchQuery" placeholder="Öğrenci ara..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                </div>
+                <div class="text-sm text-slate-500 w-full sm:w-auto text-right">
+                    Gösterilen: <span class="font-semibold text-slate-700" x-text="filteredStudents.length"></span> öğrenci
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <template x-if="students.length === 0">
+                <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm">
+                    <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <i class="fa-solid fa-user-slash"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Bu Sınıfta Henüz Öğrenci Yok</h3>
+                    <p class="text-slate-500 text-sm mb-6">Öğrenci eklemek için Yönetim sekmesini kullanabilirsiniz.</p>
+                    <button @click="activeTab = 'management'" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm shadow-md shadow-indigo-200 transition-all">
+                        <i class="fa-solid fa-user-plus mr-2"></i> Öğrenci Ekle
+                    </button>
+                </div>
+            </template>
+
+            <!-- Student Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <template x-for="student in filteredStudents" :key="student.id">
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden">
+                        <!-- Top Accent bar based on score -->
+                        <div class="absolute top-0 left-0 right-0 h-1" 
+                             :class="student.score > 0 ? 'bg-emerald-500' : (student.score < 0 ? 'bg-rose-500' : 'bg-slate-300')"></div>
+
+                        <div>
+                            <!-- Avatar & Name (Clickable for Detail) -->
+                            <div @click="openStudentDetail(student)" class="flex items-center gap-3 mb-4 cursor-pointer group/name">
+                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center shadow-md shadow-indigo-100 text-lg flex-shrink-0 group-hover/name:scale-105 transition-transform"
+                                     x-text="getInitials(student.name)">
+                                </div>
+                                <div class="overflow-hidden flex-grow">
+                                    <!-- Full name visibility: break-words and no truncate -->
+                                    <h3 class="font-bold text-slate-800 text-sm leading-snug break-words group-hover/name:text-indigo-600 transition-colors" x-text="student.name"></h3>
+                                    <span class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <span>ID: #<span x-text="student.id"></span></span>
+                                        <span>&bull;</span>
+                                        <span class="text-indigo-600 font-medium">Detaylar <i class="fa-solid fa-arrow-right text-[9px]"></i></span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Score Badge -->
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl mb-4 border border-slate-100">
+                                <span class="text-xs font-medium text-slate-500">Toplam Puan</span>
+                                <span class="text-xl font-black px-3 py-0.5 rounded-lg"
+                                      :class="student.score > 0 ? 'text-emerald-700 bg-emerald-50' : (student.score < 0 ? 'text-rose-700 bg-rose-50' : 'text-slate-600 bg-slate-200')"
+                                      x-text="student.score"></span>
+                            </div>
+                        </div>
+
+                        <!-- Plus / Minus Buttons -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <button @click="openReasonModal(student, 'plus')" 
+                                    class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-emerald-200 hover:border-emerald-600 shadow-sm">
+                                <i class="fa-solid fa-plus text-xs"></i> Puan Ver
+                            </button>
+                            <button @click="openReasonModal(student, 'minus')" 
+                                    class="py-2.5 px-3 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-1.5 border border-rose-200 hover:border-rose-600 shadow-sm">
+                                <i class="fa-solid fa-minus text-xs"></i> Puan Sil
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- TAB: WEEKLY / MONTHLY STATS -->
+        <div x-show="activeTab === 'stats'" x-cloak class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Weekly Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 uppercase tracking-wide">Bu Hafta</span>
+                            <h3 class="text-xl font-bold text-slate-800 mt-1">Haftalık Sınıf Özeti</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-calendar-week"></i>
+                        </div>
+                    </div>
+
+                    <!-- Top Plus & Minus weekly -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4">
+                            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide block mb-1">En Çok Artı Alan</span>
+                            <div class="text-lg font-black text-slate-800 truncate" x-text="weeklyStats.topPlus.name"></div>
+                            <div class="text-emerald-700 font-bold text-sm mt-1">+<span x-text="weeklyStats.topPlus.plus"></span> Puan</div>
+                        </div>
+                        <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-4">
+                            <span class="text-xs font-bold text-rose-700 uppercase tracking-wide block mb-1">En Çok Eksi Alan</span>
+                            <div class="text-lg font-black text-slate-800 truncate" x-text="weeklyStats.topMinus.name"></div>
+                            <div class="text-rose-700 font-bold text-sm mt-1">-<span x-text="weeklyStats.topMinus.minus"></span> Puan</div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-sm text-slate-700 mb-3">Haftalık Öğrenci Puan Dağılımı</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <template x-for="item in weeklyStats.all" :key="item.name">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-sm">
+                                <span class="font-semibold text-slate-800" x-text="item.name"></span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg">+<span x-text="item.plus"></span></span>
+                                    <span class="text-xs text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-lg">-<span x-text="item.minus"></span></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Monthly Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                        <div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 uppercase tracking-wide">Bu Ay</span>
+                            <h3 class="text-xl font-bold text-slate-800 mt-1">Aylık Sınıf Özeti</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                    </div>
+
+                    <!-- Top Plus & Minus monthly -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-4">
+                            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wide block mb-1">En Çok Artı Alan</span>
+                            <div class="text-lg font-black text-slate-800 truncate" x-text="monthlyStats.topPlus.name"></div>
+                            <div class="text-emerald-700 font-bold text-sm mt-1">+<span x-text="monthlyStats.topPlus.plus"></span> Puan</div>
+                        </div>
+                        <div class="bg-rose-50/60 border border-rose-200 rounded-2xl p-4">
+                            <span class="text-xs font-bold text-rose-700 uppercase tracking-wide block mb-1">En Çok Eksi Alan</span>
+                            <div class="text-lg font-black text-slate-800 truncate" x-text="monthlyStats.topMinus.name"></div>
+                            <div class="text-rose-700 font-bold text-sm mt-1">-<span x-text="monthlyStats.topMinus.minus"></span> Puan</div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-sm text-slate-700 mb-3">Aylık Öğrenci Puan Dağılımı</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <template x-for="item in monthlyStats.all" :key="item.name">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-sm">
+                                <span class="font-semibold text-slate-800" x-text="item.name"></span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg">+<span x-text="item.plus"></span></span>
+                                    <span class="text-xs text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-lg">-<span x-text="item.minus"></span></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: HISTORY LOG -->
+        <div x-show="activeTab === 'history'" x-cloak>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-800">İşlem Geçmişi</h2>
+                        <p class="text-xs text-slate-500">Bu sınıfta verilen artı ve eksi puanların zaman damgalı kaydı.</p>
+                    </div>
+                    <template x-if="history.length > 0">
+                        <button @click="clearHistory()" class="px-4 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-all border border-rose-200">
+                            Geçmişi Temizle
+                        </button>
+                    </template>
+                </div>
+
+                <template x-if="history.length === 0">
+                    <div class="p-12 text-center text-slate-400">
+                        <i class="fa-solid fa-clipboard-list text-4xl mb-3"></i>
+                        <p class="text-sm">Henüz kayıtlı bir puanlama işlemi bulunmuyor.</p>
+                    </div>
+                </template>
+
+                <div class="overflow-x-auto" x-show="history.length > 0">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                <th class="py-3 px-6 font-semibold">Öğrenci</th>
+                                <th class="py-3 px-6 font-semibold">İşlem Türü</th>
+                                <th class="py-3 px-6 font-semibold">Gerekçe</th>
+                                <th class="py-3 px-6 font-semibold">Puan</th>
+                                <th class="py-3 px-6 font-semibold">Zaman</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            <template x-for="item in history" :key="item.id">
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="py-3.5 px-6 font-semibold text-slate-800" x-text="item.studentName"></td>
+                                    <td class="py-3.5 px-6">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                                              :class="item.type === 'plus' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'">
+                                            <i :class="item.type === 'plus' ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down'"></i>
+                                            <span x-text="item.type === 'plus' ? 'Artı Puan' : 'Eksi Puan'"></span>
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-6 text-slate-600" x-text="item.reason"></td>
+                                    <td class="py-3.5 px-6 font-bold"
+                                        :class="item.type === 'plus' ? 'text-emerald-600' : 'text-rose-600'"
+                                        x-text="(item.type === 'plus' ? '+' : '-') + item.points"></td>
+                                    <td class="py-3.5 px-6 text-slate-400 text-xs" x-text="item.timestamp"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: STUDENT & CLASS MANAGEMENT -->
+        <div x-show="activeTab === 'management'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- Add Single Student Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Yeni Öğrenci Ekle</h3>
+                <p class="text-xs text-slate-500 mb-4">Şu anki sınıfa bireysel olarak öğrenci ekleyin.</p>
+                <form @submit.prevent="addStudent()" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">Öğrenci Adı Soyadı</label>
+                        <input type="text" x-model="newStudentName" placeholder="Örn: Ayşe Demir" required
+                               class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm shadow-md shadow-indigo-100 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Öğrenciyi Kaydet
+                    </button>
+                </form>
+            </div>
+
+            <!-- Bulk Add Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Toplu Öğrenci Ekle</h3>
+                <p class="text-xs text-slate-500 mb-4">Her satıra bir öğrenci gelecek şekilde isimleri girin.</p>
+                <form @submit.prevent="addBulkStudents()" class="space-y-4">
+                    <div>
+                        <textarea x-model="bulkNames" rows="4" placeholder="Ahmet Yılmaz&#10;Zeynep Demir&#10;Mehmet Kaya" required
+                                  class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-medium rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-users"></i> Toplu Ekle
+                    </button>
+                </form>
+            </div>
+
+            <!-- Class Management Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1">Sınıf Yönetimi</h3>
+                    <p class="text-xs text-slate-500 mb-4">Yeni sınıf ekleyin veya başka sınıfa geçiş yapın.</p>
+                    
+                    <form @submit.prevent="createNewClass()" class="space-y-3 mb-4">
+                        <input type="text" x-model="newClassName" placeholder="Yeni Sınıf Adı (Örn: 8-C)" required
+                               class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-school-flag"></i> Sınıf Oluştur
+                        </button>
+                    </form>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100">
+                    <button @click="exitClass()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i> Sınıf Seçim Ekranına Dön
+                    </button>
+                </div>
+            </div>
+
+            <!-- Backup & Delete Student Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-[400px]">
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Öğrenci Listesi (<span x-text="students.length"></span>)</h3>
+                <p class="text-xs text-slate-500 mb-4">Öğrencileri yönetin veya yedekleyin.</p>
+                
+                <div class="overflow-y-auto flex-grow divide-y divide-slate-100 pr-1 mb-4">
+                    <template x-for="student in students" :key="student.id">
+                        <div class="py-2.5 flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center" x-text="getInitials(student.name)"></div>
+                                <div>
+                                    <h4 class="text-xs font-semibold text-slate-800" x-text="student.name"></h4>
+                                    <span class="text-[10px] text-slate-400">Puan: <span class="font-semibold text-slate-600" x-text="student.score"></span></span>
+                                </div>
+                            </div>
+                            <button @click="deleteStudent(student.id)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Öğrenciyi Sil">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <button @click="exportData()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Tüm Verileri İndir (JSON)
+                    </button>
+                    <div class="relative">
+                        <input type="file" id="importFile" accept=".json" @change="importData($event)" class="hidden">
+                        <label for="importFile" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-upload"></i> Yedek Yükle
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & QR Lock Settings Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1">Güvenlik & Kilit</h3>
+                    <p class="text-xs text-slate-500 mb-4">Öğrencilerin izinsiz işlem yapmasını önleyin.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-800">Güvenlik Kilidi</h4>
+                                <span class="text-[10px] text-slate-400">Uygulamayı şifre/QR ile koru</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="security.enabled" @change="saveSecuritySettings()" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Öğretmen 4 Haneli PIN</label>
+                            <input type="password" maxlength="4" x-model="security.pin" @input="saveSecuritySettings()" placeholder="Örn: 1234" 
+                                   class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 mt-4">
+                    <button @click="lockApp()" class="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-lock"></i> Hemen Kilitle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- SECURITY LOCK SCREEN OVERLAY -->
+    <div x-show="isLocked" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-1">Uygulama Kilitli</h2>
+            <p class="text-xs text-slate-500 mb-6">İzinsiz veri girişini önlemek için kilitlendi. Telefonunuzla QR kodu okutarak şifrenizi telefonunuza getirebilirsiniz.</p>
+
+            <!-- QR Code Container -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner">
+                <div id="qrcode" class="flex justify-center"></div>
+                <span class="text-[10px] text-slate-400 mt-2 block font-medium">Telefon kamerasıyla taratarak şifreyi alın</span>
+            </div>
+
+            <!-- PIN Unlock Form -->
+            <form @submit.prevent="unlockWithPin()" class="space-y-4">
+                <div>
+                    <input type="password" maxlength="4" x-model="enteredPin" placeholder="4 Haneli PIN Girin" 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-lock-open"></i> Kilidi Aç
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MOBILE PIN VIEWER OVERLAY (When QR is scanned with phone) -->
+    <div x-show="isMobilePinView" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900 p-4 text-white">
+        <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-8 text-center border border-slate-700 shadow-2xl">
+            <div class="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl">
+                <i class="fa-solid fa-lock-open"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2">Öğretmen Şifreniz</h2>
+            <p class="text-xs text-slate-400 mb-6">Akıllı tahtanın kilidini açmak için kullanacağınız 4 haneli şifre:</p>
+            <div class="bg-slate-950 border-2 border-amber-500/50 rounded-2xl py-5 px-6 text-4xl font-black tracking-[0.3em] text-amber-400 mb-6 shadow-inner" x-text="mobileScannedPin"></div>
+            <button @click="isMobilePinView = false" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-sm transition-all shadow-lg">
+                Anladım / Kapat
+            </button>
+        </div>
+    </div>
+
+    <!-- FRIDAY AUTO-POPUP MODAL -->
+    <div x-show="fridayModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <span class="text-xs font-semibold px-3 py-1 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wide">Cuma Raporu & Özet</span>
+                <h3 class="text-2xl font-bold text-slate-800 mt-2">Hayırlı Cumalar! Haftanın Yıldızları</h3>
+                <p class="text-xs text-slate-500 mt-1">Bugün Cuma! Bu hafta sınıf içinde en çok öne çıkan ve dikkat çeken öğrenciler:</p>
+            </div>
+
+            <!-- Friday Highlights Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-center">
+                    <span class="text-xs font-bold text-emerald-700 block mb-1">🌟 Haftanın Birincisi (Artı)</span>
+                    <div class="text-lg font-black text-slate-800" x-text="weeklyStats.topPlus.name"></div>
+                    <div class="text-emerald-700 font-bold text-sm mt-1">+<span x-text="weeklyStats.topPlus.plus"></span> Puan</div>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-center">
+                    <span class="text-xs font-bold text-rose-700 block mb-1">⚠️ Haftanın En Çok Eksi Alanı</span>
+                    <div class="text-lg font-black text-slate-800" x-text="weeklyStats.topMinus.name"></div>
+                    <div class="text-rose-700 font-bold text-sm mt-1">-<span x-text="weeklyStats.topMinus.minus"></span> Puan</div>
+                </div>
+            </div>
+
+            <button @click="fridayModalOpen = false" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all">
+                Panoya Git ve Devam Et
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div x-show="toast.show" x-cloak 
+         class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-xl text-white text-sm font-medium flex items-center gap-3 transition-all transform"
+         :class="toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'">
+        <i :class="toast.type === 'success' ? 'fa-solid fa-circle-check text-lg' : 'fa-solid fa-circle-exclamation text-lg'"></i>
+        <span x-text="toast.message"></span>
+    </div>
+
+    <!-- REASON SELECTION MODAL -->
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div @click.away="closeModal()" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide"
+                          :class="actionType === 'plus' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                          x-text="actionType === 'plus' ? 'Artı Puan Ekle' : 'Eksi Puan Ver'"></span>
+                    <h3 class="text-lg font-bold text-slate-800 mt-1" x-text="selectedStudent ? selectedStudent.name : ''"></h3>
+                </div>
+                <button @click="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-500 mb-4">Lütfen bir gerekçe seçin:</p>
+
+            <!-- Predefined Reasons Grid -->
+            <div class="grid grid-cols-1 gap-2.5 mb-6">
+                <template x-for="reason in (actionType === 'plus' ? reasonsPlus : reasonsMinus)">
+                    <button @click="selectReason(reason)" 
+                            class="flex items-center justify-between p-3.5 rounded-xl border text-left transition-all"
+                            :class="selectedReason && selectedReason.name === reason.name ? (actionType === 'plus' ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-200' : 'bg-rose-50 border-rose-500 text-rose-900 ring-2 ring-rose-200') : 'bg-slate-50/50 border-slate-200 hover:bg-slate-100 text-slate-700'">
+                        <span class="font-medium text-sm" x-text="reason.name"></span>
+                        <span class="font-bold text-sm px-2.5 py-0.5 rounded-lg"
+                              :class="actionType === 'plus' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                              x-text="(actionType === 'plus' ? '+' : '-') + reason.points"></span>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center gap-3">
+                <button @click="closeModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition-all">
+                    İptal
+                </button>
+                <button @click="applyScore()" :disabled="!selectedReason" 
+                        class="flex-1 py-2.5 font-medium rounded-xl text-sm transition-all shadow-md text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        :class="actionType === 'plus' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-200'">
+                    Onayla ve Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET SCORES CONFIRMATION MODAL -->
+    <div x-show="resetScoresModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Puanları Sıfırla</h3>
+            <p class="text-xs text-slate-500 mb-6">Bu sınıftaki tüm öğrencilerin puanları 0 yapılacaktır.</p>
+            <div class="flex gap-2">
+                <button @click="resetScoresModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium">Vazgeç</button>
+                <button @click="resetAllScores()" class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-medium shadow-md shadow-amber-200">Sıfırla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLEAR CLASS CONFIRMATION MODAL -->
+    <div x-show="clearAllModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-trash"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1">Sınıfı Temizle</h3>
+            <p class="text-xs text-slate-500 mb-6">Bu sınıftaki tüm öğrenciler ve işlem geçmişi silinecektir.</p>
+            <div class="flex gap-2">
+                <button @click="clearAllModal = false" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium">Vazgeç</button>
+                <button @click="clearClassData()" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-medium shadow-md shadow-rose-200">Temizle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STUDENT DETAIL POPUP MODAL -->
+    <div x-show="studentDetailModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div @click.away="closeStudentDetail()" class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 flex flex-col max-h-[85vh]">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-lg shadow-md"
+                         x-text="selectedStudentDetail ? getInitials(selectedStudentDetail.name) : ''">
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 break-words" x-text="selectedStudentDetail ? selectedStudentDetail.name : ''"></h3>
+                        <span class="text-xs text-slate-400">Günlük Artı ve Eksi Puan Geçmişi</span>
+                    </div>
+                </div>
+                <button @click="closeStudentDetail()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Summary Chips -->
+            <div class="grid grid-cols-3 gap-3 mb-5">
+                <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-200">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-0.5">Toplam Puan</span>
+                    <span class="text-base font-black text-slate-800" x-text="selectedStudentDetail ? selectedStudentDetail.score : 0"></span>
+                </div>
+                <div class="bg-emerald-50 p-3 rounded-2xl text-center border border-emerald-200">
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wide block mb-0.5">Toplam Artı</span>
+                    <span class="text-base font-black text-emerald-700" x-text="'+' + studentPlusTotal"></span>
+                </div>
+                <div class="bg-rose-50 p-3 rounded-2xl text-center border border-rose-200">
+                    <span class="text-[10px] font-bold text-rose-700 uppercase tracking-wide block mb-0.5">Toplam Eksi</span>
+                    <span class="text-base font-black text-rose-700" x-text="'-' + studentMinusTotal"></span>
+                </div>
+            </div>
+
+            <!-- History Entries List -->
+            <div class="overflow-y-auto flex-grow space-y-2.5 pr-1">
+                <template x-if="studentHistoryList.length === 0">
+                    <div class="py-10 text-center text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        Bu öğrenci için henüz kayıtlı bir puanlama geçmişi bulunmuyor.
+                    </div>
+                </template>
+                <template x-for="item in studentHistoryList" :key="item.id">
+                    <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100 text-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold"
+                                 :class="item.type === 'plus' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'">
+                                <i :class="item.type === 'plus' ? 'fa-solid fa-plus' : 'fa-solid fa-minus'"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800 text-xs" x-text="item.reason"></h4>
+                                <span class="text-[10px] text-slate-400" x-text="item.timestamp"></span>
+                            </div>
+                        </div>
+                        <span class="font-bold text-sm px-2.5 py-1 rounded-xl"
+                              :class="item.type === 'plus' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                              x-text="(item.type === 'plus' ? '+' : '-') + item.points"></span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Footer Close Button -->
+            <div class="pt-4 mt-4 border-t border-slate-100">
+                <button @click="closeStudentDetail()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-2xl text-sm transition-all shadow-md">
+                    Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto" x-show="activeClassId" x-cloak>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
+            Sınıf İçi Puan Takip Sistemi &bull; Modern Eğitim Aracı &copy; 2026
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        function classApp() {
+            return {
+                activeTab: 'students',
+                searchQuery: '',
+                classes: JSON.parse(localStorage.getItem('class_app_classes')) || [],
+                activeClassId: localStorage.getItem('class_app_active_id') || null,
+                
+                security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: false, pin: '1234' },
+                isLocked: false,
+                enteredPin: '',
+                isMobilePinView: false,
+                mobileScannedPin: '',
+
+                newClassNameModal: '',
+                newClassName: '',
+                newStudentName: '',
+                bulkNames: '',
+
+                toast: {
+                    show: false,
+                    message: '',
+                    type: 'success'
+                },
+
+                modalOpen: false,
+                resetScoresModal: false,
+                clearAllModal: false,
+                fridayModalOpen: false,
+                studentDetailModalOpen: false,
+                selectedStudentDetail: null,
+                isFullscreen: false,
+
+                selectedStudent: null,
+                actionType: 'plus',
+                selectedReason: null,
+
+                reasonsPlus: [
+                    { name: 'Aktif Katılım', points: 1 },
+                    { name: 'İyi Davranış', points: 2 },
+                    { name: 'Yardımlaşma', points: 1 },
+                    { name: 'Ödev Tamamlama', points: 2 }
+                ],
+                reasonsMinus: [
+                    { name: 'İzinsiz Konuşma', points: 1 },
+                    { name: 'Dersi Bozma', points: 2 },
+                    { name: 'Geç Kalma', points: 1 }
+                ],
+
+                initApp() {
+                    this.init();
+                },
+
+                init() {
+                    // Telefonla QR taratılıp sayfa açıldıysa URL query parametresinden şifreyi yakala ve telefona göster
+                    const params = new URLSearchParams(window.location.search);
+                    const scannedPin = params.get('pin');
+                    if (scannedPin) {
+                        this.mobileScannedPin = scannedPin;
+                        this.isMobilePinView = true;
+                    }
+
+                    // Check if security lock is enabled on startup
+                    if (this.security.enabled && !this.isMobilePinView) {
+                        this.isLocked = true;
+                        this.$nextTick(() => this.generateQRCode());
+                    }
+
+                    // Check if today is Friday (5) and show Friday popup once per session
+                    const today = new Date();
+                    if (today.getDay() === 5 && !sessionStorage.getItem('friday_modal_shown') && this.activeClassId && !this.isLocked && !this.isMobilePinView) {
+                        this.fridayModalOpen = true;
+                        sessionStorage.setItem('friday_modal_shown', 'true');
+                    }
+
+                    // Listen to fullscreen change events to sync state
+                    document.addEventListener('fullscreenchange', () => {
+                        this.isFullscreen = !!document.fullscreenElement;
+                    });
+                },
+
+                lockApp() {
+                    this.isLocked = true;
+                    this.enteredPin = '';
+                    this.$nextTick(() => this.generateQRCode());
+                },
+
+                generateQRCode() {
+                    const qrContainer = document.getElementById('qrcode');
+                    if (!qrContainer) return;
+                    qrContainer.innerHTML = '';
+                    
+                    // Her seferinde tamamen farklı bir QR kod oluşması için rastgele benzersiz nonce ve query parametre kullanılıyor
+                    const uniqueNonce = Math.random().toString(36).substring(2, 10) + Date.now();
+                    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+                    const unlockUrl = `${baseUrl}?pin=${this.security.pin}&nonce=${uniqueNonce}`;
+                    
+                    try {
+                        new QRCode(qrContainer, {
+                            text: unlockUrl,
+                            width: 140,
+                            height: 140,
+                            colorDark: "#1e293b",
+                            colorLight: "#f8fafc",
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    } catch (e) {
+                        qrContainer.innerHTML = '<span class="text-xs text-rose-500">QR Üretilemedi</span>';
+                    }
+                },
+
+                unlockWithPin() {
+                    if (this.enteredPin === this.security.pin) {
+                        this.isLocked = false;
+                        this.enteredPin = '';
+                        this.showToast('Kilit başarıyla açıldı!');
+                    } else {
+                        this.showToast('Hatalı PIN kodu!', 'error');
+                        this.enteredPin = '';
+                    }
+                },
+
+                saveSecuritySettings() {
+                    localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                    this.showToast('Güvenlik ayarları kaydedildi.');
+                },
+
+                toggleFullscreen() {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            this.showToast('Tam ekran moduna geçilemedi.', 'error');
+                        });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                },
+
+                openStudentDetail(student) {
+                    this.selectedStudentDetail = student;
+                    this.studentDetailModalOpen = true;
+                },
+
+                closeStudentDetail() {
+                    this.studentDetailModalOpen = false;
+                    this.selectedStudentDetail = null;
+                },
+
+                get studentHistoryList() {
+                    if (!this.selectedStudentDetail || !this.currentClass) return [];
+                    return this.history.filter(h => h.studentName === this.selectedStudentDetail.name);
+                },
+
+                get studentPlusTotal() {
+                    return this.studentHistoryList.filter(h => h.type === 'plus').reduce((acc, curr) => acc + curr.points, 0);
+                },
+
+                get studentMinusTotal() {
+                    return this.studentHistoryList.filter(h => h.type === 'minus').reduce((acc, curr) => acc + curr.points, 0);
+                },
+
+                get currentClass() {
+                    return this.classes.find(c => c.id == this.activeClassId) || null;
+                },
+
+                get students() {
+                    return this.currentClass ? this.currentClass.students : [];
+                },
+
+                get history() {
+                    return this.currentClass ? this.currentClass.history : [];
+                },
+
+                selectClass(id) {
+                    this.activeClassId = id;
+                    localStorage.setItem('class_app_active_id', id);
+                    this.activeTab = 'students';
+                },
+
+                exitClass() {
+                    this.activeClassId = null;
+                    localStorage.removeItem('class_app_active_id');
+                },
+
+                createClassFromModal() {
+                    if (!this.newClassNameModal.trim()) return;
+                    const newId = Date.now();
+                    const newClassObj = {
+                        id: newId,
+                        name: this.newClassNameModal.trim(),
+                        students: [],
+                        history: []
+                    };
+                    this.classes.push(newClassObj);
+                    this.newClassNameModal = '';
+                    this.saveData();
+                    this.selectClass(newId);
+                    this.showToast('Yeni sınıf başarıyla oluşturuldu!');
+                },
+
+                createNewClass() {
+                    if (!this.newClassName.trim()) return;
+                    const newId = Date.now();
+                    this.classes.push({
+                        id: newId,
+                        name: this.newClassName.trim(),
+                        students: [],
+                        history: []
+                    });
+                    this.newClassName = '';
+                    this.saveData();
+                    this.showToast('Sınıf başarıyla eklendi!');
+                },
+
+                // WEEKLY STATS CALCULATION
+                get weeklyStats() {
+                    if (!this.currentClass) return { topPlus: {name:'-', plus:0}, topMinus: {name:'-', minus:0}, all: [] };
+                    const now = new Date();
+                    const day = now.getDay();
+                    const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
+                    const monday = new Date(now.setDate(diffToMonday));
+                    monday.setHours(0,0,0,0);
+
+                    const weeklyHistory = this.history.filter(h => h.id >= monday.getTime());
+                    return this.calculateRankings(weeklyHistory);
+                },
+
+                // MONTHLY STATS CALCULATION
+                get monthlyStats() {
+                    if (!this.currentClass) return { topPlus: {name:'-', plus:0}, topMinus: {name:'-', minus:0}, all: [] };
+                    const now = new Date();
+                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+                    const monthlyHistory = this.history.filter(h => h.id >= firstDayOfMonth);
+                    return this.calculateRankings(monthlyHistory);
+                },
+
+                calculateRankings(histList) {
+                    const studentScores = {};
+                    this.students.forEach(s => {
+                        studentScores[s.name] = { plus: 0, minus: 0 };
+                    });
+
+                    histList.forEach(h => {
+                        if (!studentScores[h.studentName]) {
+                            studentScores[h.studentName] = { plus: 0, minus: 0 };
+                        }
+                        if (h.type === 'plus') {
+                            studentScores[h.studentName].plus += h.points;
+                        } else {
+                            studentScores[h.studentName].minus += h.points;
+                        }
+                    });
+
+                    const arr = Object.keys(studentScores).map(name => ({
+                        name,
+                        ...studentScores[name]
+                    }));
+
+                    const topPlus = [...arr].sort((a, b) => b.plus - a.plus)[0] || { name: '-', plus: 0 };
+                    const topMinus = [...arr].sort((a, b) => b.minus - a.minus)[0] || { name: '-', minus: 0 };
+
+                    return { topPlus, topMinus, all: arr };
+                },
+
+                showToast(message, type = 'success') {
+                    this.toast = { show: true, message, type };
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, 3500);
+                },
+
+                exportData() {
+                    const data = {
+                        classes: this.classes,
+                        exportDate: new Date().toISOString()
+                    };
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `tum_siniflar_yedek_${new Date().toISOString().slice(0,10)}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    this.showToast('Tüm sınıflar başarıyla indirildi!');
+                },
+
+                importData(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            if (parsed.classes && Array.isArray(parsed.classes)) {
+                                this.classes = parsed.classes;
+                                this.saveData();
+                                this.showToast('Yedek veriler başarıyla yüklendi!');
+                            } else {
+                                this.showToast('Geçersiz yedek dosyası formatı!', 'error');
+                            }
+                        } catch (err) {
+                            this.showToast('Dosya okunurken bir hata oluştu!', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                },
+
+                saveData() {
+                    localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
+                    if (this.activeClassId) {
+                        localStorage.setItem('class_app_active_id', this.activeClassId);
+                    }
+                },
+
+                get filteredStudents() {
+                    if (!this.searchQuery) return this.students;
+                    return this.students.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                },
+
+                getInitials(name) {
+                    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                },
+
+                totalScoreSum() {
+                    return this.students.reduce((acc, curr) => acc + curr.score, 0);
+                },
+
+                addStudent() {
+                    if (!this.newStudentName.trim() || !this.currentClass) return;
+                    const newId = this.students.length > 0 ? Math.max(...this.students.map(s => s.id)) + 1 : 1;
+                    this.currentClass.students.push({
+                        id: newId,
+                        name: this.newStudentName.trim(),
+                        score: 0
+                    });
+                    this.newStudentName = '';
+                    this.saveData();
+                    this.showToast('Öğrenci eklendi!');
+                },
+
+                addBulkStudents() {
+                    if (!this.bulkNames.trim() || !this.currentClass) return;
+                    const lines = this.bulkNames.split('\n');
+                    let nextId = this.students.length > 0 ? Math.max(...this.students.map(s => s.id)) + 1 : 1;
+                    
+                    lines.forEach(line => {
+                        let name = line.trim();
+                        if (name) {
+                            this.currentClass.students.push({
+                                id: nextId++,
+                                name: name,
+                                score: 0
+                            });
+                        }
+                    });
+                    this.bulkNames = '';
+                    this.activeTab = 'students';
+                    this.saveData();
+                    this.showToast('Öğrenciler toplu olarak eklendi!');
+                },
+
+                deleteStudent(id) {
+                    if (!this.currentClass) return;
+                    this.currentClass.students = this.currentClass.students.filter(s => s.id !== id);
+                    this.saveData();
+                },
+
+                openReasonModal(student, type) {
+                    this.selectedStudent = student;
+                    this.actionType = type;
+                    this.selectedReason = null;
+                    this.modalOpen = true;
+                },
+
+                selectReason(reason) {
+                    this.selectedReason = reason;
+                },
+
+                applyScore() {
+                    if (!this.selectedStudent || !this.selectedReason || !this.currentClass) return;
+
+                    const pointsToAdd = this.selectedReason.points;
+                    const student = this.students.find(s => s.id === this.selectedStudent.id);
+
+                    if (student) {
+                        if (this.actionType === 'plus') {
+                            student.score += pointsToAdd;
+                        } else {
+                            student.score -= pointsToAdd;
+                        }
+
+                        const now = new Date();
+                        const timeStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                        
+                        this.currentClass.history.unshift({
+                            id: Date.now(),
+                            studentName: student.name,
+                            type: this.actionType,
+                            reason: this.selectedReason.name,
+                            points: pointsToAdd,
+                            timestamp: timeStr
+                        });
+
+                        this.saveData();
+                    }
+
+                    this.closeModal();
+                },
+
+                closeModal() {
+                    this.modalOpen = false;
+                    this.selectedStudent = null;
+                    this.selectedReason = null;
+                },
+
+                resetAllScores() {
+                    if (!this.currentClass) return;
+                    this.currentClass.students.forEach(s => s.score = 0);
+                    this.currentClass.history.unshift({
+                        id: Date.now(),
+                        studentName: 'Tüm Sınıf',
+                        type: 'plus',
+                        reason: 'Puanlar Sıfırlandı',
+                        points: 0,
+                        timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.saveData();
+                    this.resetScoresModal = false;
+                    this.showToast('Sınıf puanları sıfırlandı.');
+                },
+
+                clearHistory() {
+                    if (!this.currentClass) return;
+                    this.currentClass.history = [];
+                    this.saveData();
+                    this.showToast('Geçmiş temizlendi.');
+                },
+
+                clearClassData() {
+                    if (!this.currentClass) return;
+                    this.currentClass.students = [];
+                    this.currentClass.history = [];
+                    this.saveData();
+                    this.clearAllModal = false;
+                    this.showToast('Sınıf verileri temizlendi.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
