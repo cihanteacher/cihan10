@@ -21,13 +21,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col" x-data="classApp()" x-init="initApp()">
 
-    <!-- CLOUD SYNC STATUS BADGE -->
+    <!-- CLOUD SYNC STATUS BADGE (Cleaned up: status text only, no button) -->
     <div class="fixed top-3 right-3 z-50 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-medium">
         <span class="w-2.5 h-2.5 rounded-full" :class="isCloudSynced ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
         <span class="text-slate-600" x-text="isCloudStatusText"></span>
-        <button @click="quickSyncCloud()" class="ml-1 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md text-[10px] font-semibold transition-all" title="Hemen Senkronize Et">
-            <i class="fa-solid fa-rotate"></i>
-        </button>
     </div>
 
     <!-- CLASS SELECTION OVERLAY (Blurred background when no class is selected) -->
@@ -97,7 +94,7 @@
                 </div>
             </div>
 
-            <!-- Header Right Controls (Toplam puan kaldırıldı, sadece öğrenci sayısı kaldı) -->
+            <!-- Header Right Controls -->
             <div class="flex items-center gap-3">
                 <!-- Lock Screen Button -->
                 <button @click="lockApp()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-sm font-medium backdrop-blur-md border border-white/20 transition-all flex items-center gap-2" title="Ekranı Kilitle">
@@ -155,7 +152,7 @@
                 </button>
             </div>
 
-            <!-- Global Action Buttons (Sınıfı temizle kaldırıldı, Bulutla senkronize butonu puanları sıfırlanın yanına taşındı) -->
+            <!-- Global Action Buttons -->
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button @click="resetScoresModal = true" class="px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all border border-amber-200 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-right"></i> Puanları Sıfırla
@@ -455,7 +452,7 @@
                 </form>
             </div>
 
-            <!-- Cloud Sync Center Card (Simplified: No forms, only sync buttons) -->
+            <!-- Cloud Sync Center Card -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-1">
