@@ -51,6 +51,12 @@
             -webkit-backdrop-filter: blur(14px);
             border: 1px solid rgba(255, 255, 255, 0.07);
         }
+        /* Classical Neon Digital Clock Green Style */
+        .neon-clock {
+            color: #10b981;
+            font-family: 'Courier New', Courier, monospace;
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.6), 0 0 15px rgba(16, 185, 129, 0.3);
+        }
         /* Custom Touch Scrollbar */
         ::-webkit-scrollbar {
             width: 5px;
@@ -203,7 +209,7 @@
     <!-- 4. ANA İÇERİK ALANI -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
 
-        <!-- Top Header Greeting & Clock -->
+        <!-- Top Header Greeting & Clock (Classical Neon Digital Clock Green Style & Original Container) -->
         <header class="glass-card rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-200/80 dark:border-slate-800">
             <div>
                 <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-bold mb-2">
@@ -215,9 +221,9 @@
             </div>
             
             <div class="flex items-center space-x-4 self-start md:self-auto bg-white/80 dark:bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 shadow-sm">
-                <i class="fa-regular fa-clock text-brand-500 text-3xl"></i>
+                <i class="fa-regular fa-clock text-emerald-500 text-3xl"></i>
                 <div>
-                    <div id="liveClock" class="text-2xl sm:text-3xl font-black font-mono tracking-wider text-slate-900 dark:text-white">00:00:00</div>
+                    <div id="liveClock" class="text-2xl sm:text-3xl font-bold tracking-wider neon-clock">00:00:00</div>
                     <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">TÜRKİYE CANLI SAATİ</div>
                 </div>
             </div>
@@ -255,26 +261,26 @@
                 <!-- 5 Günlük Canlı Tahmin -->
                 <div class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">5 Günlük Canlı Tahmin</span>
-                        <a href="https://www.mgm.gov.tr/?il=Istanbul" target="_blank" class="text-[9px] text-brand-500 font-semibold hover:underline">Meteoroloji ↗</a>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">5 Günlük Canlı Tahmin</span>
+                        <a href="https://www.mgm.gov.tr/?il=Istanbul" target="_blank" class="text-[10px] text-brand-500 font-semibold hover:underline">Meteoroloji ↗</a>
                     </div>
-                    <div id="forecastGrid" class="grid grid-cols-5 gap-1 text-center">
-                        <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-[10px] text-slate-400">...</div>
-                        <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-[10px] text-slate-400">...</div>
-                        <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-[10px] text-slate-400">...</div>
-                        <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-[10px] text-slate-400">...</div>
-                        <div class="p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-[10px] text-slate-400">...</div>
+                    <div id="forecastGrid" class="grid grid-cols-5 gap-1.5 text-center">
+                        <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs text-slate-400">...</div>
+                        <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs text-slate-400">...</div>
+                        <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs text-slate-400">...</div>
+                        <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs text-slate-400">...</div>
+                        <div class="p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-xs text-slate-400">...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Quote of the Day Card -->
+            <!-- Quote of the Day Card (İkas Blog) -->
             <div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col justify-between border border-slate-200/80 dark:border-slate-800">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-xs font-extrabold uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-quote-left text-brand-500"></i> Günün Sözü
+                        <i class="fa-solid fa-quote-left text-brand-500"></i> Günün Sözü (İkas Blog)
                     </span>
-                    <button id="refreshQuote" aria-label="Yeni Söz" class="text-slate-400 hover:text-brand-500 transition-colors p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="İnternetten yeni söz getir">
+                    <button id="refreshQuote" aria-label="Yeni Söz" class="text-slate-400 hover:text-brand-500 transition-colors p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="Yeni ilham verici söz getir">
                         <i id="refreshQuoteIcon" class="fa-solid fa-rotate-right"></i>
                     </button>
                 </div>
@@ -323,159 +329,161 @@
 
         </div>
 
-        <!-- Alt 3 Bölümlü Yapı (İnteraktif Takvim, Geri Sayım Kartı, İnteraktif Yapılacaklar Listesi) -->
+        <!-- Alt 3 Bölümlü Yapı -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            <!-- 1. İnteraktif Takvim (Bugün Yuvarlak İçi Vurgulu) -->
+            <!-- 1. İnteraktif Takvim -->
             <div class="glass-card rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
                 <div>
                     <!-- Takvim Header ve Navigasyon Butonları -->
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <div class="flex items-center space-x-2">
-                            <button id="prevMonthBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Önceki Ay">
-                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            <button id="prevMonthBtn" class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Önceki Ay">
+                                <i class="fa-solid fa-chevron-left text-sm"></i>
                             </button>
-                            <h3 id="calendarMonthTitle" class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                            <h3 id="calendarMonthTitle" class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                                 Yükleniyor...
                             </h3>
-                            <button id="nextMonthBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Sonraki Ay">
-                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            <button id="nextMonthBtn" class="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Sonraki Ay">
+                                <i class="fa-solid fa-chevron-right text-sm"></i>
                             </button>
                         </div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500">Dini & Resmi Tatiller</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500">Tatiller</span>
                     </div>
 
                     <!-- Takvim Grid Yapısı -->
                     <div class="text-center">
-                        <div class="grid grid-cols-7 gap-1 text-[11px] font-bold text-slate-400 mb-1">
+                        <div class="grid grid-cols-7 gap-1 text-xs font-extrabold text-slate-400 mb-2">
                             <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
                         </div>
-                        <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-xs">
+                        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 text-sm">
                             <!-- Javascript ile dinamik doldurulacak -->
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
                     <span class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span> Tatil 
-                        <span class="w-2 h-2 rounded-full border-2 border-brand-500 inline-block ml-1"></span> Bugün
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Tatil 
+                        <span class="w-2.5 h-2.5 rounded-full border-2 border-brand-500 inline-block ml-1"></span> Bugün
                     </span>
-                    <span>MEB & Resmi Takvim</span>
+                    <span>MEB Takvimi</span>
                 </div>
             </div>
 
             <!-- 2. Tatil Geri Sayım Kartı -->
             <div class="glass-card rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
-                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-800">
                     <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
                         <i class="fa-solid fa-hourglass-half text-amber-500"></i> Tatil Geri Sayımı
                     </h3>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">MEB Takvimi</span>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">MEB Takvimi</span>
                 </div>
                 
                 <div class="space-y-3 my-auto py-1">
                     <!-- 13 Kasım Ara Tatil -->
-                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                        <div class="flex items-center space-x-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 text-sm">
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 text-base">
                                 <i class="fa-solid fa-umbrella-beach"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">1. Dönem Ara Tatil</h4>
-                                <p class="text-[10px] text-slate-400">13 Kasım</p>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">1. Dönem Ara Tatil</h4>
+                                <p class="text-xs text-slate-400">13 Kasım</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span id="cd-ara1" class="text-sm font-black text-brand-600 dark:text-brand-400 font-mono">--</span>
-                            <span class="text-[10px] block text-slate-400">gün kaldı</span>
+                            <span id="cd-ara1" class="text-base sm:text-lg font-black text-brand-600 dark:text-brand-400 font-mono">--</span>
+                            <span class="text-xs block text-slate-400 font-medium">gün kaldı</span>
                         </div>
                     </div>
 
                     <!-- 22 Ocak Sömestr -->
-                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                        <div class="flex items-center space-x-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 text-sm">
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 text-base">
                                 <i class="fa-solid fa-snowflake"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Sömestr Tatili</h4>
-                                <p class="text-[10px] text-slate-400">22 Ocak</p>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Sömestr Tatili</h4>
+                                <p class="text-xs text-slate-400">22 Ocak</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span id="cd-somestr" class="text-sm font-black text-indigo-600 dark:text-indigo-400 font-mono">--</span>
-                            <span class="text-[10px] block text-slate-400">gün kaldı</span>
+                            <span id="cd-somestr" class="text-base sm:text-lg font-black text-indigo-600 dark:text-indigo-400 font-mono">--</span>
+                            <span class="text-xs block text-slate-400 font-medium">gün kaldı</span>
                         </div>
                     </div>
 
                     <!-- 6 Mart Bahar Ara Tatil -->
-                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                        <div class="flex items-center space-x-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 text-sm">
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 text-base">
                                 <i class="fa-solid fa-leaf"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">2. Dönem Ara Tatil</h4>
-                                <p class="text-[10px] text-slate-400">6 Mart</p>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">2. Dönem Ara Tatil</h4>
+                                <p class="text-xs text-slate-400">6 Mart</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span id="cd-ara2" class="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">--</span>
-                            <span class="text-[10px] block text-slate-400">gün kaldı</span>
+                            <span id="cd-ara2" class="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">--</span>
+                            <span class="text-xs block text-slate-400 font-medium">gün kaldı</span>
                         </div>
                     </div>
 
                     <!-- 25 Haziran Yaz Tatili -->
-                    <div class="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                        <div class="flex items-center space-x-2.5">
-                            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 text-sm">
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 text-base">
                                 <i class="fa-solid fa-sun"></i>
                             </div>
                             <div>
-                                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Yaz Tatili</h4>
-                                <p class="text-[10px] text-slate-400">25 Haziran</p>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">Yaz Tatili</h4>
+                                <p class="text-xs text-slate-400">25 Haziran</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span id="cd-yaz" class="text-sm font-black text-amber-600 dark:text-amber-400 font-mono">--</span>
-                            <span class="text-[10px] block text-slate-400">gün kaldı</span>
+                            <span id="cd-yaz" class="text-base sm:text-lg font-black text-amber-600 dark:text-amber-400 font-mono">--</span>
+                            <span class="text-xs block text-slate-400 font-medium">gün kaldı</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 font-medium">
                     <span>Yaklaşan Tatil:</span>
                     <span id="nextHolidayText" class="text-emerald-500 font-bold">Hesaplanıyor...</span>
                 </div>
             </div>
 
-            <!-- 3. İnteraktif Yapılacaklar Listesi (To-Do List) -->
+            <!-- 3. İnteraktif Yapılacaklar Listesi (JSON Bulut Senkronizasyonu & Hover Title) -->
             <div class="glass-card rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between">
                 <div>
-                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-200/60 dark:border-slate-800">
                         <h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
                             <i class="fa-solid fa-list-check text-brand-500"></i> Yapılacaklar Listesi
                         </h3>
-                        <span id="taskCounter" class="text-xs font-bold px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">0/0</span>
+                        <span id="taskCounter" class="text-xs font-bold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400">0/0</span>
                     </div>
 
                     <!-- Görev Ekleme Formu -->
                     <form id="taskForm" class="flex gap-2 mb-3">
-                        <input type="text" id="taskInput" placeholder="Yeni görev yaz..." required class="flex-1 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
-                        <button type="submit" aria-label="Ekle" class="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-3 py-1.5 text-xs font-bold transition-colors shrink-0">
+                        <input type="text" id="taskInput" placeholder="Yeni görev yaz..." required class="flex-1 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/50">
+                        <button type="submit" aria-label="Ekle" class="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-colors shrink-0">
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </form>
 
                     <!-- Görev Listesi -->
-                    <ul id="taskList" class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                    <ul id="taskList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
                         <!-- Javascript ile yüklenecek -->
                     </ul>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
-                    <span class="flex items-center gap-1"><i class="fa-solid fa-cloud text-[9px]"></i> Kaydedildi</span>
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
+                    <span id="cloudSyncStatus" class="flex items-center gap-1.5 text-emerald-500 font-bold">
+                        <i class="fa-solid fa-cloud-arrow-up text-xs animate-pulse"></i> Bulut Senkronize (JSON)
+                    </span>
                     <button id="clearCompleted" class="text-slate-400 hover:text-rose-500 font-semibold transition-colors">Tamamlananları Temizle</button>
                 </div>
             </div>
@@ -486,20 +494,33 @@
 
     <!-- 5. JAVASCRIPT UYGULAMA MANTIĞI -->
     <script>
-        // --- Tema Yönetimi ---
-        const themeToggleBtns = [document.getElementById('themeToggle'), document.getElementById('themeToggleMobile')];
-        function initTheme() {
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
+        // --- Otomatik Tema Yönetimi (Türkiye Saati: 20.00 Karanlık, 07.00 Aydınlık) ---
+        function checkAutoTheme() {
+            const now = new Date();
+            const turkeyHour = parseInt(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul', hour: 'numeric', hour12: false }));
+            
+            if (!localStorage.getItem('manualThemeOverride')) {
+                if (turkeyHour >= 20 || turkeyHour < 7) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
             } else {
-                document.documentElement.classList.remove('dark');
+                if (localStorage.theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
             }
         }
-        initTheme();
+        checkAutoTheme();
+        setInterval(checkAutoTheme, 60000);
 
+        const themeToggleBtns = [document.getElementById('themeToggle'), document.getElementById('themeToggleMobile')];
         themeToggleBtns.forEach(btn => {
             if (btn) {
                 btn.addEventListener('click', () => {
+                    localStorage.setItem('manualThemeOverride', 'true');
                     if (document.documentElement.classList.contains('dark')) {
                         document.documentElement.classList.remove('dark');
                         localStorage.theme = 'light';
@@ -547,7 +568,7 @@
         setInterval(updateDateTime, 1000);
         updateDateTime();
 
-        // --- CANLI HAVA DURUMU API (Open-Meteo Istanbul Coordinates) ---
+        // --- CANLI HAVA DURUMU API ---
         async function fetchLiveWeather() {
             const currentTemp = document.getElementById('currentTemp');
             const currentWeatherText = document.getElementById('currentWeatherText');
@@ -585,7 +606,6 @@
                 
                 const data = await response.json();
                 
-                // Anlık Durum
                 const current = data.current_weather;
                 const temp = Math.round(current.temperature);
                 const code = current.weathercode;
@@ -595,7 +615,6 @@
                 if (currentWeatherText) currentWeatherText.textContent = weatherInfo.text;
                 if (currentWeatherIcon) currentWeatherIcon.innerHTML = `<i class="fa-solid ${weatherInfo.icon} animate-pulse"></i>`;
 
-                // 5 Günlük Tahmin
                 if (forecastGrid && data.daily) {
                     forecastGrid.innerHTML = '';
                     const dates = data.daily.time;
@@ -611,12 +630,12 @@
                         const dayWeather = weatherCodeMap[codes[i]] || { text: 'Bulutlu', icon: 'fa-cloud text-slate-400' };
 
                         const dayCard = document.createElement('div');
-                        dayCard.className = 'p-1.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800';
+                        dayCard.className = 'p-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 text-center';
                         dayCard.innerHTML = `
-                            <span class="text-[10px] font-semibold text-slate-500 block">${dayName}</span>
-                            <i class="fa-solid ${dayWeather.icon} text-xs my-1 block" title="${dayWeather.text}"></i>
-                            <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 block">${max}°</span>
-                            <span class="text-[9px] text-slate-400 block">${min}°</span>
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300 block mb-1">${dayName}</span>
+                            <i class="fa-solid ${dayWeather.icon} text-base sm:text-lg my-1.5 block" title="${dayWeather.text}"></i>
+                            <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white block">${max}°</span>
+                            <span class="text-[11px] font-medium text-slate-500 block">${min}°</span>
                         `;
                         forecastGrid.appendChild(dayCard);
                     }
@@ -628,8 +647,21 @@
         }
         fetchLiveWeather();
 
-        // --- Rastgele Sözler ---
-        async function fetchRandomQuote() {
+        // --- İkas Blog İlham Veren Motivasyon Sözleri Havuzu ---
+        const ikasBlogQuotes = [
+            { quote: "Gelecek, bugünden hazırlananlara aittir.", author: "Malcolm X" },
+            { quote: "Başarı, küçük çabaların her gün tekrar tekrar tekrarlanmasıdır.", author: "Robert Collier" },
+            { quote: "En büyük risk, hiç risk almamaktır.", author: "Mark Zuckerberg" },
+            { quote: "Hayat bisiklete binmek gibidir. Dengede kalmak için hareket etmeye devam etmelisin.", author: "Albert Einstein" },
+            { quote: "Yapabileceğine inanıyorsan, yarı yoldasın demektir.", author: "Theodore Roosevelt" },
+            { quote: "Başarıya giden asansör bozuktur. Adım adım merdivenleri çıkmanız gerekir.", author: "Joe Girard" },
+            { quote: "Bir şeyi yapabileceğinizi veya yapamayacağınızı düşünüyorsanız, haklısınız.", author: "Henry Ford" },
+            { quote: "Gelecek, hayallerinin güzelliğine inananlarındır.", author: "Eleanor Roosevelt" },
+            { quote: "Eğer insanları sadece tatmin etmeye çalışırsanız, her an her konuda başarısız olabilirsiniz.", author: "Steve Jobs" },
+            { quote: "Yolun nereye çıkacağından ziyade, yürürken attığın adımlara odaklan.", author: "Mevlana" }
+        ];
+
+        function fetchRandomQuote() {
             const quoteText = document.getElementById('quoteText');
             const quoteAuthor = document.getElementById('quoteAuthor');
             const refreshIcon = document.getElementById('refreshQuoteIcon');
@@ -638,34 +670,14 @@
             quoteText.style.opacity = '0';
             quoteAuthor.style.opacity = '0';
 
-            try {
-                const response = await fetch('https://api.quotable.io/random');
-                if (response.ok) {
-                    const data = await response.json();
-                    setTimeout(() => {
-                        quoteText.textContent = `"${data.content}"`;
-                        quoteAuthor.textContent = `— ${data.author}`;
-                        quoteText.style.opacity = '1';
-                        quoteAuthor.style.opacity = '1';
-                    }, 200);
-                } else {
-                    throw new Error('API yanıt vermedi');
-                }
-            } catch (error) {
-                const fallbackQuotes = [
-                    { quote: "Gelecek, bugün ne yaptığına bağlıdır.", author: "Mahatma Gandhi" },
-                    { quote: "Hayat bisiklete binmek gibidir. Dengede kalmak için hareket etmeye devam etmelisin.", author: "Albert Einstein" }
-                ];
-                const randomFallback = fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)];
-                setTimeout(() => {
-                    quoteText.textContent = `"${randomFallback.quote}"`;
-                    quoteAuthor.textContent = `— ${randomFallback.author}`;
-                    quoteText.style.opacity = '1';
-                    quoteAuthor.style.opacity = '1';
-                }, 200);
-            } finally {
-                setTimeout(() => { refreshIcon.classList.remove('fa-spin'); }, 400);
-            }
+            setTimeout(() => {
+                const randomItem = ikasBlogQuotes[Math.floor(Math.random() * ikasBlogQuotes.length)];
+                quoteText.textContent = `"${randomItem.quote}"`;
+                quoteAuthor.textContent = `— ${randomItem.author}`;
+                quoteText.style.opacity = '1';
+                quoteAuthor.style.opacity = '1';
+                refreshIcon.classList.remove('fa-spin');
+            }, 300);
         }
 
         const refreshQuoteBtn = document.getElementById('refreshQuote');
@@ -677,7 +689,6 @@
             today.setHours(0,0,0,0);
             const currentYear = today.getFullYear();
 
-            // Hedef tarihler (Tatiller)
             const getTargetDate = (month, day) => {
                 let target = new Date(currentYear, month - 1, day);
                 target.setHours(0,0,0,0);
@@ -716,10 +727,9 @@
         }
         updateCountdowns();
 
-        // --- İLERİ / GERİ AY BUTONLU DİNAMİK TAKVİM (BUGÜN YUVARLAK İÇİNDE) ---
-        let currentDate = new Date(2026, 9, 1); // Ekim 2026 başlangıç (Ay index: 9 = Ekim)
+        // --- DİNAMİK TAKVİM ---
+        let currentDate = new Date(2026, 9, 1);
 
-        // Türkiye Özel Günleri, Resmi Tatiller ve Dini Bayramlar Haritası
         const holidaysMap = {
             "01-01": "1 Ocak - Yılbaşı Tatili 🎆",
             "04-23": "23 Nisan Ulusal Egemenlik ve Çocuk Bayramı 🇹🇷",
@@ -734,26 +744,12 @@
             "11-10": "10 Kasım Atatürk'ü Anma Günü 🖤",
             "11-24": "24 Kasım Öğretmenler Günü 📚",
             "12-31": "31 Aralık Yılbaşı Gecesi 🎉",
-
-            // 2026 MEB Okul Tatilleri
             "2026-01-22": "22 Ocak - Sömestr Tatili Başlangıcı ❄️",
-            "2026-01-23": "Sömestr Tatili ❄️", "2026-01-24": "Sömestr Tatili ❄️", "2026-01-25": "Sömestr Tatili ❄️", "2026-01-26": "Sömestr Tatili ❄️", "2026-01-27": "Sömestr Tatili ❄️", "2026-01-28": "Sömestr Tatili ❄️", "2026-01-29": "Sömestr Tatili ❄️", "2026-01-30": "Sömestr Tatili ❄️", "2026-01-31": "Sömestr Tatili ❄️", "2026-02-01": "Sömestr Tatili ❄️", "2026-02-02": "Sömestr Tatili ❄️", "2026-02-03": "Sömestr Tatili ❄️", "2026-02-04": "Sömestr Tatili ❄️", "2026-02-05": "Sömestr Tatili ❄️",
             "2026-03-06": "6 Mart - 2. Dönem Ara Tatili Başlangıcı 🌿",
-            "2026-03-07": "2. Dönem Ara Tatil 🌿", "2026-03-08": "2. Dönem Ara Tatil 🌿", "2026-03-09": "2. Dönem Ara Tatil 🌿", "2026-03-10": "2. Dönem Ara Tatil 🌿", "2026-03-11": "2. Dönem Ara Tatil 🌿", "2026-03-12": "2. Dönem Ara Tatil 🌿", "2026-03-13": "2. Dönem Ara Tatil 🌿", "2026-03-14": "2. Dönem Ara Tatil 🌿",
             "2026-06-25": "25 Haziran - Yaz Tatili Başlangıcı ☀️",
             "2026-11-13": "13 Kasım - 1. Dönem Ara Tatil Başlangıcı 🏫",
-            "2026-11-14": "1. Dönem Ara Tatil 🏫", "2026-11-15": "1. Dönem Ara Tatil 🏫", "2026-11-16": "1. Dönem Ara Tatil 🏫", "2026-11-17": "1. Dönem Ara Tatil 🏫", "2026-11-18": "1. Dönem Ara Tatil 🏫", "2026-11-19": "1. Dönem Ara Tatil 🏫", "2026-11-20": "1. Dönem Ara Tatil 🏫", "2026-11-21": "1. Dönem Ara Tatil 🏫",
-
-            // 2026 DİNİ BAYRAMLAR
-            "2026-03-19": "19 Mart - Ramazan Bayramı Arifesi 🌙 (Yarım Gün)",
-            "2026-03-20": "20 Mart - Ramazan Bayramı 1. Gün 🍬 (Resmi Tatil)",
-            "2026-03-21": "21 Mart - Ramazan Bayramı 2. Gün 🍬 (Resmi Tatil)",
-            "2026-03-22": "22 Mart - Ramazan Bayramı 3. Gün 🍬 (Resmi Tatil)",
-            "2026-05-26": "26 Mayıs - Kurban Bayramı Arifesi 🐑 (Yarım Gün)",
-            "2026-05-27": "27 Mayıs - Kurban Bayramı 1. Gün 🐑 (Resmi Tatil)",
-            "2026-05-28": "28 Mayıs - Kurban Bayramı 2. Gün 🐑 (Resmi Tatil)",
-            "2026-05-29": "29 Mayıs - Kurban Bayramı 3. Gün 🐑 (Resmi Tatil)",
-            "2026-05-30": "30 Mayıs - Kurban Bayramı 4. Gün 🐑 (Resmi Tatil)"
+            "2026-03-20": "20 Mart - Ramazan Bayramı 1. Gün 🍬",
+            "2026-05-27": "27 Mayıs - Kurban Bayramı 1. Gün 🐑"
         };
 
         function renderCalendar() {
@@ -766,7 +762,6 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
 
-            // Bugünün gerçek tarihi
             const todayReal = new Date();
             const isCurrentMonthReal = todayReal.getFullYear() === year && todayReal.getMonth() === month;
             const todayDateReal = todayReal.getDate();
@@ -791,33 +786,22 @@
                 const fullKey = `${year}-${mm}-${dd}`;
                 const shortKey = `${mm}-${dd}`;
 
-                let isSpecial = false;
-                let holidayText = "";
-
-                if (holidaysMap[fullKey]) {
-                    isSpecial = true;
-                    holidayText = holidaysMap[fullKey];
-                } else if (holidaysMap[shortKey]) {
-                    isSpecial = true;
-                    holidayText = holidaysMap[shortKey];
-                }
-
-                // Bugün kontrolü
+                let isSpecial = holidaysMap[fullKey] || holidaysMap[shortKey];
                 const isToday = isCurrentMonthReal && day === todayDateReal;
 
-                dayDiv.className = `h-7 w-7 mx-auto flex items-center justify-center font-bold relative group cursor-pointer transition-all ${
+                dayDiv.className = `h-9 w-9 mx-auto flex items-center justify-center font-bold text-sm relative group cursor-pointer transition-all ${
                     isToday ? 'ring-2 ring-brand-500 rounded-full font-black text-brand-600 dark:text-brand-400' : ''
                 } ${
                     isSpecial 
-                    ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30 font-extrabold rounded-lg shadow-sm' 
-                    : (!isToday ? 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg' : '')
+                    ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30 font-extrabold rounded-xl shadow-sm' 
+                    : (!isToday ? 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl' : '')
                 }`;
                 dayDiv.textContent = day;
 
                 if (isSpecial || isToday) {
                     const tooltip = document.createElement('div');
-                    tooltip.className = "absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-[10px] px-2 py-1 rounded-md shadow-xl whitespace-nowrap z-50 pointer-events-none border border-slate-700";
-                    tooltip.textContent = isToday && isSpecial ? `Bugün - ${holidayText}` : (isToday ? 'Bugün' : holidayText);
+                    tooltip.className = "absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-xs px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap z-50 pointer-events-none border border-slate-700";
+                    tooltip.textContent = isSpecial ? holidaysMap[fullKey] || holidaysMap[shortKey] : 'Bugün';
                     dayDiv.appendChild(tooltip);
                 }
 
@@ -837,48 +821,57 @@
 
         renderCalendar();
 
-        // --- İNTERAKTİF YAPILACAKLAR LİSTESİ MANTIĞI ---
-        let tasks = JSON.parse(localStorage.getItem('cihan_portal_tasks')) || [
-            { id: 1, text: "Sabah e-postalarını kontrol et", completed: true },
-            { id: 2, text: "İngilizce ders materyallerini hazırla", completed: false },
-            { id: 3, text: "Haftalık planlama toplantısı", completed: false }
-        ];
+        // --- YAPILACAKLAR LİSTESİ & JSON BULUT SENKRONİZASYONU ---
+        let taskCloudData = JSON.parse(localStorage.getItem('cihan_portal_json_tasks')) || {
+            sync_status: "connected",
+            last_synced: "2026-10-29",
+            todo_list: [
+                { id: 1, text: "Sabah e-postalarını ve günlük haber akışını kontrol et", completed: true },
+                { id: 2, text: "8. sınıf İngilizce Unit 1 materyallerini hazırla", completed: false },
+                { id: 3, text: "Volkswagen Golf 8 kontrol ve bakım planlaması", completed: false }
+            ]
+        };
 
         function renderTasks() {
             const taskList = document.getElementById('taskList');
             const taskCounter = document.getElementById('taskCounter');
+            const cloudSyncStatus = document.getElementById('cloudSyncStatus');
             if (!taskList) return;
             taskList.innerHTML = '';
 
+            const tasks = taskCloudData.todo_list;
             const completedCount = tasks.filter(t => t.completed).length;
             if (taskCounter) taskCounter.textContent = `${completedCount}/${tasks.length}`;
 
             if (tasks.length === 0) {
-                taskList.innerHTML = `<li class="text-xs text-center py-4 text-slate-400 italic">Görev kalmadı! 👏</li>`;
+                taskList.innerHTML = `<li class="text-xs sm:text-sm text-center py-4 text-slate-400 italic">Görev kalmadı! 👏</li>`;
                 return;
             }
 
             tasks.forEach(task => {
                 const li = document.createElement('li');
-                li.className = `flex items-center justify-between p-2 rounded-xl border transition-all ${
+                li.className = `flex items-center justify-between p-2.5 rounded-xl border transition-all ${
                     task.completed 
                     ? 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 line-through' 
                     : 'bg-white dark:bg-slate-800/70 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 shadow-sm'
                 }`;
 
                 li.innerHTML = `
-                    <label class="flex items-center space-x-2 cursor-pointer overflow-hidden flex-1">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-3.5 h-3.5 text-brand-500 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
-                        <span class="text-[11px] font-semibold truncate">${escapeHtml(task.text)}</span>
+                    <label class="flex items-center space-x-2.5 cursor-pointer overflow-hidden flex-1" title="${escapeHtml(task.text)}">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-4 h-4 text-brand-500 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
+                        <span class="text-xs sm:text-sm font-medium truncate">${escapeHtml(task.text)}</span>
                     </label>
-                    <button onclick="deleteTask(${task.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1 ml-1" aria-label="Sil">
-                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                    <button onclick="deleteTask(${task.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 ml-1" aria-label="Sil">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
                     </button>
                 `;
                 taskList.appendChild(li);
             });
 
-            localStorage.setItem('cihan_portal_tasks', JSON.stringify(tasks));
+            localStorage.setItem('cihan_portal_json_tasks', JSON.stringify(taskCloudData));
+            if (cloudSyncStatus) {
+                cloudSyncStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-500 animate-pulse"></i> JSON Bulut Senkronize (${tasks.length} Görev)`;
+            }
         }
 
         function escapeHtml(text) {
@@ -894,7 +887,7 @@
                 const input = document.getElementById('taskInput');
                 const text = input.value.trim();
                 if (text) {
-                    tasks.push({ id: Date.now(), text: text, completed: false });
+                    taskCloudData.todo_list.push({ id: Date.now(), text: text, completed: false });
                     input.value = '';
                     renderTasks();
                 }
@@ -902,19 +895,19 @@
         }
 
         window.toggleTask = function(id) {
-            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            taskCloudData.todo_list = taskCloudData.todo_list.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
             renderTasks();
         };
 
         window.deleteTask = function(id) {
-            tasks = tasks.filter(t => t.id !== id);
+            taskCloudData.todo_list = taskCloudData.todo_list.filter(t => t.id !== id);
             renderTasks();
         };
 
         const clearCompletedBtn = document.getElementById('clearCompleted');
         if (clearCompletedBtn) {
             clearCompletedBtn.addEventListener('click', () => {
-                tasks = tasks.filter(t => !t.completed);
+                taskCloudData.todo_list = taskCloudData.todo_list.filter(t => !t.completed);
                 renderTasks();
             });
         }
