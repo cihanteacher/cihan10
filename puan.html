@@ -764,9 +764,7 @@
 
                 init() {
                     this.isLocked = true;
-                    if (this.security.isLocked) {
-                        this.startLockPolling();
-                    }
+                    this.startBackgroundPolling();
 
                     const today = new Date();
                     if (today.getDay() === 5 && !sessionStorage.getItem('friday_modal_shown') && this.activeClassId && !this.isLocked) {
@@ -807,13 +805,7 @@
                         if (data && data.security) {
                             this.security = data.security;
                             localStorage.setItem('class_app_security', JSON.stringify(this.security));
-                            if (this.security.isLocked) {
-                                this.isLocked = true;
-                                this.startLockPolling();
-                            } else {
-                                this.isLocked = false;
-                                this.stopLockPolling();
-                            }
+                            this.isLocked = this.security.isLocked;
                         }
                     } catch (e) {
                         console.error(e);
@@ -828,7 +820,6 @@
                     this.security.isLocked = true;
                     this.saveSecuritySettings();
                     this.isLocked = true;
-                    this.startLockPolling();
                     await this.saveToJsonBin();
                     this.showToast('Akıllı tahta uzaktan kilitlendi.');
                 },
@@ -844,7 +835,6 @@
                     this.security.pin = '7187';
                     this.saveSecuritySettings();
                     this.isLocked = false;
-                    this.stopLockPolling();
                     await this.saveToJsonBin();
                     this.unlockPasswordInput = '';
                     this.showToast('Akıllı tahta kilidi açıldı.');
@@ -861,48 +851,42 @@
                     this.security.pin = '7187';
                     this.saveSecuritySettings();
                     this.isLocked = false;
-                    this.stopLockPolling();
-                    await this.saveToJsonBin();
                     this.overlayPasswordInput = '';
                     this.showToast('Akıllı tahta kilidi açıldı.');
+                    await this.saveToJsonBin();
                 },
 
                 async checkCloudLockStatus() {
                     await this.loadFromJsonBin();
                     if (!this.security.isLocked) {
                         this.isLocked = false;
-                        this.stopLockPolling();
                         this.showToast('Buluttan kilit açıldı!');
                     } else {
                         this.showToast('Akıllı tahta hala kilitli.', 'error');
                     }
                 },
 
-                startLockPolling() {
+                startBackgroundPolling() {
                     if (this.pollInterval) return;
                     this.pollInterval = setInterval(async () => {
-                        if (this.isLocked) {
-                            try {
-                                const data = await window.jsonBinSync.load(EMBEDDED_BIN_ID, EMBEDDED_API_KEY);
-                                if (data && data.security && !data.security.isLocked) {
-                                    this.security.isLocked = false;
+                        try {
+                            const data = await window.jsonBinSync.load(EMBEDDED_BIN_ID, EMBEDDED_API_KEY);
+                            if (data && data.security) {
+                                if (data.security.isLocked !== this.isLocked) {
+                                    this.isLocked = data.security.isLocked;
+                                    this.security.isLocked = data.security.isLocked;
                                     localStorage.setItem('class_app_security', JSON.stringify(this.security));
-                                    this.isLocked = false;
-                                    this.stopLockPolling();
-                                    this.showToast('Uzaktan kilit açıldı!');
+                                    if (this.isLocked) {
+                                        this.showToast('Akıllı tahta uzaktan kilitlendi!');
+                                    } else {
+                                        this.showToast('Akıllı tahta kilidi uzaktan açıldı!');
+                                    }
                                 }
-                            } catch (e) {
-                                // Ignore
                             }
+                        } catch (e) {
+                            // Ignore network errors during background sync
                         }
                     }, 5000);
-                },
-
-                stopLockPolling() {
-                    if (this.pollInterval) {
-                        clearInterval(this.pollInterval);
-                        this.pollInterval = null;
-                    }
                 },
 
                 saveSecuritySettings() {
