@@ -736,8 +736,8 @@
     <!-- JSONBin.io Sync API Module -->
     <script>
         // Kendi JSONBin Bin ID ve API Key bilgilerinizi buraya yazabilirsiniz.
-        const EMBEDDED_BIN_ID = '6ae24191ac6210605a59fcea'; 
-        const EMBEDDED_API_KEY = '$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq';
+        const EMBEDDED_BIN_ID = ''; 
+        const EMBEDDED_API_KEY = '';
 
         window.jsonBinSync = {
             async save(binId, apiKey, data) {
@@ -787,7 +787,7 @@
                 classes: JSON.parse(localStorage.getItem('class_app_classes')) || [],
                 activeClassId: localStorage.getItem('class_app_active_id') || null,
                 
-                security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: false, pin: '1234' },
+                security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: true, pin: '1234' },
                 
                 isLocked: false,
                 enteredPin: '',
@@ -830,7 +830,12 @@
                         this.isMobilePinView = true;
                     }
 
-                    if (this.security.enabled && !this.isMobilePinView) {
+                    // Site her açıldığında tamamen rastgele 4 haneli yeni şifre üret
+                    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+                    this.security.pin = randomPin;
+                    this.security.enabled = true;
+
+                    if (!this.isMobilePinView) {
                         this.isLocked = true;
                         this.$nextTick(() => this.generateQRCode());
                     }
