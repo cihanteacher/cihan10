@@ -56,13 +56,18 @@
             </div>
 
             <!-- Create New Class Form -->
-            <form @submit.prevent="createClassFromModal()" class="flex gap-2">
+            <form @submit.prevent="createClassFromModal()" class="flex gap-2 mb-3">
                 <input type="text" x-model="newClassNameModal" placeholder="Yeni Sınıf Adı (Örn: 9-A, 10-B)" required
                        class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <button type="submit" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Sınıf Ekle
                 </button>
             </form>
+
+            <!-- Skip / Quick Start Button -->
+            <button type="button" @click="skipClassSelection()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-2xl text-sm transition-all flex items-center justify-center gap-2 border border-slate-200">
+                <i class="fa-solid fa-forward"></i> Hızlı Başla / Atla
+            </button>
         </div>
     </div>
 
@@ -200,7 +205,6 @@
                                      x-text="getInitials(student.name)">
                                 </div>
                                 <div class="overflow-hidden flex-grow">
-                                    <!-- Full name visibility: break-words and no truncate -->
                                     <h3 class="font-bold text-slate-800 text-sm leading-snug break-words group-hover/name:text-indigo-600 transition-colors" x-text="student.name"></h3>
                                     <span class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                                         <span>ID: #<span x-text="student.id"></span></span>
@@ -487,8 +491,13 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Öğretmen 4 Haneli PIN</label>
-                            <input type="password" maxlength="4" x-model="security.pin" @input="saveSecuritySettings()" placeholder="Örn: 1234" 
-                                   class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <div class="flex gap-2">
+                                <input type="password" maxlength="4" x-model="security.pin" @input="saveSecuritySettings()" placeholder="Örn: 1234" 
+                                       class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <button type="button" @click="generateRandomPin()" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-medium border border-indigo-200 transition-all flex items-center justify-center gap-1.5 flex-shrink-0" title="Rastgele PIN Üret">
+                                    <i class="fa-solid fa-dice"></i> Rastgele
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -793,7 +802,6 @@
                 },
 
                 init() {
-                    // Telefonla QR taratılıp sayfa açıldıysa URL query parametresinden şifreyi yakala ve telefona göster
                     const params = new URLSearchParams(window.location.search);
                     const scannedPin = params.get('pin');
                     if (scannedPin) {
@@ -801,20 +809,17 @@
                         this.isMobilePinView = true;
                     }
 
-                    // Check if security lock is enabled on startup
                     if (this.security.enabled && !this.isMobilePinView) {
                         this.isLocked = true;
                         this.$nextTick(() => this.generateQRCode());
                     }
 
-                    // Check if today is Friday (5) and show Friday popup once per session
                     const today = new Date();
                     if (today.getDay() === 5 && !sessionStorage.getItem('friday_modal_shown') && this.activeClassId && !this.isLocked && !this.isMobilePinView) {
                         this.fridayModalOpen = true;
                         sessionStorage.setItem('friday_modal_shown', 'true');
                     }
 
-                    // Listen to fullscreen change events to sync state
                     document.addEventListener('fullscreenchange', () => {
                         this.isFullscreen = !!document.fullscreenElement;
                     });
@@ -831,7 +836,6 @@
                     if (!qrContainer) return;
                     qrContainer.innerHTML = '';
                     
-                    // Her seferinde tamamen farklı bir QR kod oluşması için rastgele benzersiz nonce ve query parametre kullanılıyor
                     const uniqueNonce = Math.random().toString(36).substring(2, 10) + Date.now();
                     const baseUrl = window.location.href.split('?')[0].split('#')[0];
                     const unlockUrl = `${baseUrl}?pin=${this.security.pin}&nonce=${uniqueNonce}`;
@@ -864,6 +868,13 @@
                 saveSecuritySettings() {
                     localStorage.setItem('class_app_security', JSON.stringify(this.security));
                     this.showToast('Güvenlik ayarları kaydedildi.');
+                },
+
+                generateRandomPin() {
+                    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+                    this.security.pin = randomPin;
+                    this.saveSecuritySettings();
+                    this.showToast('Rastgele şifre üretildi: ' + randomPin);
                 },
 
                 toggleFullscreen() {
@@ -940,237 +951,96 @@
                     this.showToast('Yeni sınıf başarıyla oluşturuldu!');
                 },
 
+                skipClassSelection() {
+                    if (this.classes.length > 0) {
+                        this.selectClass(this.classes[0].id);
+                    } else {
+                        const newId = Date.now();
+                        const defaultClass = {
+                            id: newId,
+                            name: 'Genel Sınıf',
+                            students: [],
+                            history: []
+                        };
+                        this.classes.push(defaultClass);
+                        this.saveData();
+                        this.selectClass(newId);
+                    }
+                    this.showToast('Hızlı mod ile giriş yapıldı.');
+                },
+
                 createNewClass() {
                     if (!this.newClassName.trim()) return;
                     const newId = Date.now();
-                    this.classes.push({
+                    const newClassObj = {
                         id: newId,
                         name: this.newClassName.trim(),
                         students: [],
                         history: []
-                    });
+                    };
+                    this.classes.push(newClassObj);
                     this.newClassName = '';
                     this.saveData();
-                    this.showToast('Sınıf başarıyla eklendi!');
-                },
-
-                // WEEKLY STATS CALCULATION
-                get weeklyStats() {
-                    if (!this.currentClass) return { topPlus: {name:'-', plus:0}, topMinus: {name:'-', minus:0}, all: [] };
-                    const now = new Date();
-                    const day = now.getDay();
-                    const diffToMonday = now.getDate() - day + (day === 0 ? -6 : 1);
-                    const monday = new Date(now.setDate(diffToMonday));
-                    monday.setHours(0,0,0,0);
-
-                    const weeklyHistory = this.history.filter(h => h.id >= monday.getTime());
-                    return this.calculateRankings(weeklyHistory);
-                },
-
-                // MONTHLY STATS CALCULATION
-                get monthlyStats() {
-                    if (!this.currentClass) return { topPlus: {name:'-', plus:0}, topMinus: {name:'-', minus:0}, all: [] };
-                    const now = new Date();
-                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-                    const monthlyHistory = this.history.filter(h => h.id >= firstDayOfMonth);
-                    return this.calculateRankings(monthlyHistory);
-                },
-
-                calculateRankings(histList) {
-                    const studentScores = {};
-                    this.students.forEach(s => {
-                        studentScores[s.name] = { plus: 0, minus: 0 };
-                    });
-
-                    histList.forEach(h => {
-                        if (!studentScores[h.studentName]) {
-                            studentScores[h.studentName] = { plus: 0, minus: 0 };
-                        }
-                        if (h.type === 'plus') {
-                            studentScores[h.studentName].plus += h.points;
-                        } else {
-                            studentScores[h.studentName].minus += h.points;
-                        }
-                    });
-
-                    const arr = Object.keys(studentScores).map(name => ({
-                        name,
-                        ...studentScores[name]
-                    }));
-
-                    const topPlus = [...arr].sort((a, b) => b.plus - a.plus)[0] || { name: '-', plus: 0 };
-                    const topMinus = [...arr].sort((a, b) => b.minus - a.minus)[0] || { name: '-', minus: 0 };
-
-                    return { topPlus, topMinus, all: arr };
-                },
-
-                showToast(message, type = 'success') {
-                    this.toast = { show: true, message, type };
-                    setTimeout(() => {
-                        this.toast.show = false;
-                    }, 3500);
-                },
-
-                exportData() {
-                    const data = {
-                        classes: this.classes,
-                        exportDate: new Date().toISOString()
-                    };
-                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-                    const downloadAnchor = document.createElement('a');
-                    downloadAnchor.setAttribute("href", dataStr);
-                    downloadAnchor.setAttribute("download", `tum_siniflar_yedek_${new Date().toISOString().slice(0,10)}.json`);
-                    document.body.appendChild(downloadAnchor);
-                    downloadAnchor.click();
-                    downloadAnchor.remove();
-                    this.showToast('Tüm sınıflar başarıyla indirildi!');
-                },
-
-                importData(event) {
-                    const file = event.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const parsed = JSON.parse(e.target.result);
-                            if (parsed.classes && Array.isArray(parsed.classes)) {
-                                this.classes = parsed.classes;
-                                this.saveData();
-                                this.showToast('Yedek veriler başarıyla yüklendi!');
-                            } else {
-                                this.showToast('Geçersiz yedek dosyası formatı!', 'error');
-                            }
-                        } catch (err) {
-                            this.showToast('Dosya okunurken bir hata oluştu!', 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                    event.target.value = '';
-                },
-
-                saveData() {
-                    localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
-                    if (this.activeClassId) {
-                        localStorage.setItem('class_app_active_id', this.activeClassId);
-                    }
-                },
-
-                get filteredStudents() {
-                    if (!this.searchQuery) return this.students;
-                    return this.students.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
-                },
-
-                getInitials(name) {
-                    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                },
-
-                totalScoreSum() {
-                    return this.students.reduce((acc, curr) => acc + curr.score, 0);
+                    this.selectClass(newId);
+                    this.showToast('Yeni sınıf başarıyla oluşturuldu!');
                 },
 
                 addStudent() {
                     if (!this.newStudentName.trim() || !this.currentClass) return;
-                    const newId = this.students.length > 0 ? Math.max(...this.students.map(s => s.id)) + 1 : 1;
-                    this.currentClass.students.push({
-                        id: newId,
+                    const newStudent = {
+                        id: Date.now(),
                         name: this.newStudentName.trim(),
                         score: 0
-                    });
+                    };
+                    this.currentClass.students.push(newStudent);
                     this.newStudentName = '';
                     this.saveData();
-                    this.showToast('Öğrenci eklendi!');
+                    this.showToast('Öğrenci başarıyla eklendi.');
                 },
 
                 addBulkStudents() {
                     if (!this.bulkNames.trim() || !this.currentClass) return;
                     const lines = this.bulkNames.split('\n');
-                    let nextId = this.students.length > 0 ? Math.max(...this.students.map(s => s.id)) + 1 : 1;
-                    
+                    let count = 0;
                     lines.forEach(line => {
-                        let name = line.trim();
-                        if (name) {
+                        const trimmed = line.trim();
+                        if (trimmed) {
                             this.currentClass.students.push({
-                                id: nextId++,
-                                name: name,
+                                id: Date.now() + Math.random(),
+                                name: trimmed,
                                 score: 0
                             });
+                            count++;
                         }
                     });
                     this.bulkNames = '';
-                    this.activeTab = 'students';
                     this.saveData();
-                    this.showToast('Öğrenciler toplu olarak eklendi!');
+                    this.showToast(`${count} öğrenci eklendi.`);
                 },
 
                 deleteStudent(id) {
                     if (!this.currentClass) return;
                     this.currentClass.students = this.currentClass.students.filter(s => s.id !== id);
                     this.saveData();
-                },
-
-                openReasonModal(student, type) {
-                    this.selectedStudent = student;
-                    this.actionType = type;
-                    this.selectedReason = null;
-                    this.modalOpen = true;
-                },
-
-                selectReason(reason) {
-                    this.selectedReason = reason;
-                },
-
-                applyScore() {
-                    if (!this.selectedStudent || !this.selectedReason || !this.currentClass) return;
-
-                    const pointsToAdd = this.selectedReason.points;
-                    const student = this.students.find(s => s.id === this.selectedStudent.id);
-
-                    if (student) {
-                        if (this.actionType === 'plus') {
-                            student.score += pointsToAdd;
-                        } else {
-                            student.score -= pointsToAdd;
-                        }
-
-                        const now = new Date();
-                        const timeStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ' + now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                        
-                        this.currentClass.history.unshift({
-                            id: Date.now(),
-                            studentName: student.name,
-                            type: this.actionType,
-                            reason: this.selectedReason.name,
-                            points: pointsToAdd,
-                            timestamp: timeStr
-                        });
-
-                        this.saveData();
-                    }
-
-                    this.closeModal();
-                },
-
-                closeModal() {
-                    this.modalOpen = false;
-                    this.selectedStudent = null;
-                    this.selectedReason = null;
+                    this.showToast('Öğrenci silindi.');
                 },
 
                 resetAllScores() {
                     if (!this.currentClass) return;
                     this.currentClass.students.forEach(s => s.score = 0);
-                    this.currentClass.history.unshift({
-                        id: Date.now(),
-                        studentName: 'Tüm Sınıf',
-                        type: 'plus',
-                        reason: 'Puanlar Sıfırlandı',
-                        points: 0,
-                        timestamp: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-                    });
+                    this.currentClass.history = [];
                     this.saveData();
                     this.resetScoresModal = false;
-                    this.showToast('Sınıf puanları sıfırlandı.');
+                    this.showToast('Puanlar sıfırlandı.');
+                },
+
+                clearClassData() {
+                    if (!this.currentClass) return;
+                    this.currentClass.students = [];
+                    this.currentClass.history = [];
+                    this.saveData();
+                    this.clearAllModal = false;
+                    this.showToast('Sınıf temizlendi.');
                 },
 
                 clearHistory() {
@@ -1180,15 +1050,141 @@
                     this.showToast('Geçmiş temizlendi.');
                 },
 
-                clearClassData() {
-                    if (!this.currentClass) return;
-                    this.currentClass.students = [];
-                    this.currentClass.history = [];
+                openReasonModal(student, type) {
+                    this.selectedStudent = student;
+                    this.actionType = type;
+                    this.selectedReason = null;
+                    this.modalOpen = true;
+                },
+
+                closeModal() {
+                    this.modalOpen = false;
+                    this.selectedStudent = null;
+                    this.selectedReason = null;
+                },
+
+                selectReason(reason) {
+                    this.selectedReason = reason;
+                },
+
+                applyScore() {
+                    if (!this.selectedStudent || !this.selectedReason || !this.currentClass) return;
+                    const pts = this.selectedReason.points;
+                    if (this.actionType === 'plus') {
+                        this.selectedStudent.score += pts;
+                    } else {
+                        this.selectedStudent.score -= pts;
+                    }
+
+                    const historyItem = {
+                        id: Date.now(),
+                        studentName: this.selectedStudent.name,
+                        type: this.actionType,
+                        reason: this.selectedReason.name,
+                        points: pts,
+                        timestamp: new Date().toLocaleString('tr-TR')
+                    };
+
+                    this.currentClass.history.unshift(historyItem);
                     this.saveData();
-                    this.clearAllModal = false;
-                    this.showToast('Sınıf verileri temizlendi.');
+                    this.closeModal();
+                    this.showToast(`${this.selectedStudent.name} için işlem kaydedildi.`);
+                },
+
+                totalScoreSum() {
+                    if (!this.students.length) return 0;
+                    return this.students.reduce((acc, curr) => acc + curr.score, 0);
+                },
+
+                getInitials(name) {
+                    if (!name) return '?';
+                    const parts = name.trim().split(' ');
+                    if (parts.length >= 2) {
+                        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                    }
+                    return name.substring(0, 2).toUpperCase();
+                },
+
+                showToast(msg, type = 'success') {
+                    this.toast.message = msg;
+                    this.toast.type = type;
+                    this.toast.show = true;
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, 3000);
+                },
+
+                exportData() {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.classes));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", "sinif_puan_yedek_" + new Date().toISOString().slice(0,10) + ".json");
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    this.showToast('Yedek başarıyla indirildi.');
+                },
+
+                importData(event) {
+                    const fileReader = new FileReader();
+                    if (event.target.files[0]) {
+                        fileReader.readAsText(event.target.files[0], "UTF-8");
+                        fileReader.onload = (e) => {
+                            try {
+                                const parsed = JSON.parse(e.target.result);
+                                if (Array.isArray(parsed)) {
+                                    this.classes = parsed;
+                                    this.saveData();
+                                    this.showToast('Yedek başarıyla yüklendi!');
+                                } else {
+                                    this.showToast('Geçersiz dosya formatı!', 'error');
+                                }
+                            } catch (err) {
+                                this.showToast('Dosya okunurken hata oluştu!', 'error');
+                            }
+                        };
+                    }
+                },
+
+                saveData() {
+                    localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
+                },
+
+                get filteredStudents() {
+                    if (!this.searchQuery.trim()) return this.students;
+                    const q = this.searchQuery.toLowerCase();
+                    return this.students.filter(s => s.name.toLowerCase().includes(q));
+                },
+
+                get weeklyStats() {
+                    const statsMap = {};
+                    this.students.forEach(s => { statsMap[s.name] = { name: s.name, plus: 0, minus: 0 }; });
+                    
+                    this.history.forEach(h => {
+                        if (!statsMap[h.studentName]) {
+                            statsMap[h.studentName] = { name: h.studentName, plus: 0, minus: 0 };
+                        }
+                        if (h.type === 'plus') statsMap[h.studentName].plus += h.points;
+                        else statsMap[h.studentName].minus += h.points;
+                    });
+
+                    const arr = Object.values(statsMap);
+                    let topPlus = { name: 'Veri Yok', plus: 0 };
+                    let topMinus = { name: 'Veri Yok', minus: 0 };
+
+                    arr.forEach(item => {
+                        if (item.plus > topPlus.plus) topPlus = item;
+                        if (item.minus > topMinus.minus) topMinus = item;
+                    });
+
+                    return { topPlus, topMinus, all: arr };
+                },
+
+                get monthlyStats() {
+                    // For demonstration, using same structure over history
+                    return this.weeklyStats;
                 }
-            }
+            };
         }
     </script>
 </body>
