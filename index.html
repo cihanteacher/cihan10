@@ -480,11 +480,16 @@
                     </ul>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-xs text-slate-400 font-medium">
-                    <span id="cloudSyncStatus" class="flex items-center gap-1.5 text-emerald-500 font-bold">
-                        <i class="fa-solid fa-cloud-arrow-up text-xs animate-pulse"></i> JSON Bulut Senkronize (Veritabanı Güncel)
+                <div class="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-400 font-medium">
+                    <span id="cloudSyncStatus" class="flex items-center gap-1.5 text-emerald-500 font-bold truncate">
+                        <i class="fa-solid fa-cloud-arrow-up text-xs animate-pulse"></i> JSON Bulut Senkronize
                     </span>
-                    <button id="clearCompleted" class="text-slate-400 hover:text-rose-500 font-semibold transition-colors">Tamamlananları Temizle</button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateJsonDatabase()" class="px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 font-bold transition-colors flex items-center gap-1" title="JSON veritabanını manuel olarak güncelle ve buluta kaydet">
+                            <i class="fa-solid fa-rotate"></i> JSON Güncelle
+                        </button>
+                        <button id="clearCompleted" class="text-slate-400 hover:text-rose-500 font-semibold transition-colors">Temizle</button>
+                    </div>
                 </div>
             </div>
 
@@ -822,57 +827,104 @@
 
         renderCalendar();
 
-        // --- YAPILACAKLAR LİSTESİ & JSON VERİTABANI SENKRONİZASYONU ---
-        let taskCloudData = JSON.parse(localStorage.getItem('cihan_portal_json_tasks')) || {
-            sync_status: "connected",
-            last_synced: "2026-10-29",
-            todo_list: [
-                { id: 1, text: "Sabah e-postalarını ve günlük haber akışını kontrol et", completed: true },
-                { id: 2, text: "8. sınıf İngilizce Unit 1 materyallerini hazırla", completed: false },
-                { id: 3, text: "Volkswagen Golf 8 kontrol ve bakım planlaması", completed: false }
-            ]
+        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU (TARAYICI BELLEĞİ YOK) ---
+        const BIN_ID = "6ae24191ac6210605a59fcea";
+        const API_KEY = "$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq";
+
+        let currentTasksData = {
+            todo_list: []
         };
 
-        function renderTasks() {
+        async function fetchTasksFromCloud() {
+            const cloudSyncStatus = document.getElementById('cloudSyncStatus');
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: {
+                        'X-Master-Key': API_KEY
+                    }
+                });
+                if (!response.ok) throw new Error('Bulut verisi alınamadı');
+                const data = await response.json();
+                if (data && data.record) {
+                    currentTasksData = data.record;
+                }
+                renderTasksUI();
+                if (cloudSyncStatus) {
+                    cloudSyncStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-500"></i> JSON Veritabanı Senkronize`;
+                }
+            } catch (error) {
+                console.error('JSONBin veri çekme hatası:', error);
+                renderTasksUI();
+                if (cloudSyncStatus) {
+                    cloudSyncStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-rose-500"></i> Bağlantı Hatası`;
+                }
+            }
+        }
+
+        async function saveTasksToCloud() {
+            const cloudSyncStatus = document.getElementById('cloudSyncStatus');
+            if (cloudSyncStatus) {
+                cloudSyncStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-xs text-brand-500 animate-spin"></i> JSON Güncelleniyor...`;
+            }
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(currentTasksData)
+                });
+                if (!response.ok) throw new Error('Buluta kaydedilemedi');
+                if (cloudSyncStatus) {
+                    cloudSyncStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-500"></i> JSON Başarıyla Güncellendi`;
+                }
+            } catch (error) {
+                console.error('JSONBin kayıt hatası:', error);
+                if (cloudSyncStatus) {
+                    cloudSyncStatus.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-rose-500"></i> Güncelleme Başarısız`;
+                }
+            }
+        }
+
+        window.updateJsonDatabase = async function() {
+            await saveTasksToCloud();
+        };
+
+        function renderTasksUI() {
             const taskList = document.getElementById('taskList');
             const taskCounter = document.getElementById('taskCounter');
-            const cloudSyncStatus = document.getElementById('cloudSyncStatus');
             if (!taskList) return;
             taskList.innerHTML = '';
 
-            const tasks = taskCloudData.todo_list;
+            const tasks = currentTasksData.todo_list || [];
             const completedCount = tasks.filter(t => t.completed).length;
             if (taskCounter) taskCounter.textContent = `${completedCount}/${tasks.length}`;
 
             if (tasks.length === 0) {
                 taskList.innerHTML = `<li class="text-xs sm:text-sm text-center py-4 text-slate-400 italic">Görev kalmadı! 👏</li>`;
-            } else {
-                tasks.forEach(task => {
-                    const li = document.createElement('li');
-                    li.className = `flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                        task.completed 
-                        ? 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 line-through' 
-                        : 'bg-white dark:bg-slate-800/70 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 shadow-sm'
-                    }`;
-
-                    li.innerHTML = `
-                        <label class="flex items-center space-x-2.5 cursor-pointer overflow-hidden flex-1" title="${escapeHtml(task.text)}">
-                            <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-4 h-4 text-brand-500 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
-                            <span class="text-xs sm:text-sm font-medium truncate">${escapeHtml(task.text)}</span>
-                        </label>
-                        <button onclick="deleteTask(${task.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 ml-1" aria-label="Sil">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    `;
-                    taskList.appendChild(li);
-                });
+                return;
             }
 
-            // JSON veritabanına kaydet ve güncelle
-            localStorage.setItem('cihan_portal_json_tasks', JSON.stringify(taskCloudData));
-            if (cloudSyncStatus) {
-                cloudSyncStatus.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-xs text-emerald-500 animate-pulse"></i> JSON Bulut Senkronize (${tasks.length} Görev)`;
-            }
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                    task.completed 
+                    ? 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-500 line-through' 
+                    : 'bg-white dark:bg-slate-800/70 border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-200 shadow-sm'
+                }`;
+
+                li.innerHTML = `
+                    <label class="flex items-center space-x-2.5 cursor-pointer overflow-hidden flex-1" title="${escapeHtml(task.text)}">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-4 h-4 text-brand-500 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
+                        <span class="text-xs sm:text-sm font-medium truncate">${escapeHtml(task.text)}</span>
+                    </label>
+                    <button onclick="deleteTask(${task.id})" class="text-slate-400 hover:text-rose-500 transition-colors p-1.5 ml-1" aria-label="Sil">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
         }
 
         function escapeHtml(text) {
@@ -883,37 +935,45 @@
 
         const taskForm = document.getElementById('taskForm');
         if (taskForm) {
-            taskForm.addEventListener('submit', (e) => {
+            taskForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const input = document.getElementById('taskInput');
                 const text = input.value.trim();
                 if (text) {
-                    taskCloudData.todo_list.push({ id: Date.now(), text: text, completed: false });
+                    if (!currentTasksData.todo_list) currentTasksData.todo_list = [];
+                    currentTasksData.todo_list.push({ id: Date.now(), text: text, completed: false });
                     input.value = '';
-                    renderTasks();
+                    renderTasksUI();
+                    await saveTasksToCloud();
                 }
             });
         }
 
-        window.toggleTask = function(id) {
-            taskCloudData.todo_list = taskCloudData.todo_list.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-            renderTasks();
+        window.toggleTask = async function(id) {
+            if (!currentTasksData.todo_list) return;
+            currentTasksData.todo_list = currentTasksData.todo_list.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            renderTasksUI();
+            await saveTasksToCloud();
         };
 
-        window.deleteTask = function(id) {
-            taskCloudData.todo_list = taskCloudData.todo_list.filter(t => t.id !== id);
-            renderTasks();
+        window.deleteTask = async function(id) {
+            if (!currentTasksData.todo_list) return;
+            currentTasksData.todo_list = currentTasksData.todo_list.filter(t => t.id !== id);
+            renderTasksUI();
+            await saveTasksToCloud();
         };
 
         const clearCompletedBtn = document.getElementById('clearCompleted');
         if (clearCompletedBtn) {
-            clearCompletedBtn.addEventListener('click', () => {
-                taskCloudData.todo_list = taskCloudData.todo_list.filter(t => !t.completed);
-                renderTasks();
+            clearCompletedBtn.addEventListener('click', async () => {
+                if (!currentTasksData.todo_list) return;
+                currentTasksData.todo_list = currentTasksData.todo_list.filter(t => !t.completed);
+                renderTasksUI();
+                await saveTasksToCloud();
             });
         }
 
-        renderTasks();
+        fetchTasksFromCloud();
     </script>
 </body>
 </html>
