@@ -513,26 +513,32 @@
             <!-- Security & QR Lock Settings Card -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-1">Güvenlik & Kilit</h3>
-                    <p class="text-xs text-slate-500 mb-4">Öğrencilerin izinsiz işlem yapmasını önleyin.</p>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1">Güvenlik & Uzaktan Kilit</h3>
+                    <p class="text-xs text-slate-500 mb-4">Akıllı tahtayı telefonunuzdan uzaktan kilitleyin veya şifre ile açın.</p>
                     
                     <div class="space-y-4">
                         <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
                             <div>
-                                <h4 class="text-xs font-semibold text-slate-800">Güvenlik Kilidi</h4>
-                                <span class="text-[10px] text-slate-400">Uygulamayı şifre/QR ile koru</span>
+                                <h4 class="text-xs font-semibold text-slate-800">Bulut Kilit Sistemi</h4>
+                                <span class="text-[10px] text-slate-400">Şifre korumalı uzaktan bulut kontrolü</span>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" x-model="security.enabled" @change="saveSecuritySettings()" class="sr-only peer">
-                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs">Aktif</span>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Kilit Açma Şifresi</label>
+                            <input type="password" x-model="unlockPasswordInput" placeholder="Şifre giriniz (7187)" 
+                                   class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 mt-4">
-                    <button @click="lockApp()" class="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-lock"></i> Hemen Kilitle
+                <div class="pt-4 border-t border-slate-100 mt-4 space-y-2">
+                    <button @click="remoteLockApp()" class="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-lock"></i> Akıllı Tahtayı Uzaktan Kilitle
+                    </button>
+                    <button @click="remoteUnlockApp()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-lock-open"></i> Şifre ile Kilidi Aç
                     </button>
                 </div>
             </div>
@@ -541,42 +547,21 @@
     </main>
 
     <!-- SECURITY LOCK SCREEN OVERLAY -->
-    <div x-show="isLocked" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl p-4">
+    <div x-show="isLocked" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-xl p-4">
         <div class="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
-            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
+            <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-1">Uygulama Kilitli</h2>
-            <p class="text-xs text-slate-500 mb-6">İzinsiz veri girişini önlemek için kilitlendi. Telefonunuzla QR kodu okutarak şifrenizi telefonunuza getirebilirsiniz.</p>
+            <h2 class="text-2xl font-bold text-slate-800 mb-1">Akıllı Tahta Kilitli</h2>
+            <p class="text-xs text-slate-500 mb-6">Bu cihaz öğretmen kontrolü ile güvenli moda alındı. Öğrencilerin işlem yapması engellenmiştir.</p>
 
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 inline-block mb-6 shadow-inner">
-                <div id="qrcode" class="flex justify-center"></div>
-                <span class="text-[10px] text-slate-400 mt-2 block font-medium">Telefon kamerasıyla taratarak şifreyi alın</span>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-6 text-slate-600 text-xs font-medium flex items-center justify-center gap-2 shadow-inner">
+                <i class="fa-solid fa-cloud-arrow-down text-indigo-600 animate-pulse text-base"></i>
+                <span>Öğretmen telefonundan açılması bekleniyor...</span>
             </div>
 
-            <form @submit.prevent="unlockWithPin()" class="space-y-4">
-                <div>
-                    <input type="password" maxlength="4" x-model="enteredPin" placeholder="4 Haneli PIN Girin" 
-                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg tracking-widest font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-lock-open"></i> Kilidi Aç
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MOBILE PIN VIEWER OVERLAY -->
-    <div x-show="isMobilePinView" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900 p-4 text-white">
-        <div class="bg-slate-800 rounded-3xl max-w-sm w-full p-8 text-center border border-slate-700 shadow-2xl">
-            <div class="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-3xl flex items-center justify-center mx-auto mb-4 text-3xl">
-                <i class="fa-solid fa-lock-open"></i>
-            </div>
-            <h2 class="text-2xl font-bold mb-2">Öğretmen Şifreniz</h2>
-            <p class="text-xs text-slate-400 mb-6">Akıllı tahtanın kilidini açmak için kullanacağınız 4 haneli şifre:</p>
-            <div class="bg-slate-950 border-2 border-amber-500/50 rounded-2xl py-5 px-6 text-4xl font-black tracking-[0.3em] text-amber-400 mb-6 shadow-inner" x-text="mobileScannedPin"></div>
-            <button @click="isMobilePinView = false" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-sm transition-all shadow-lg">
-                Anladım / Kapat
+            <button @click="checkCloudLockStatus()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-2xl text-sm shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate"></i> Buluttan Durumu Kontrol Et
             </button>
         </div>
     </div>
@@ -708,7 +693,7 @@
         </div>
     </footer>
 
-    <!-- JSONBin.io Embedded Credentials Sync Module -->
+    <!-- JSONBin.io & Application Logic -->
     <script>
         const EMBEDDED_BIN_ID = '6ae24191ac6210605a59fcea'; 
         const EMBEDDED_API_KEY = '$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq';
@@ -740,10 +725,7 @@
                 return json.record;
             }
         };
-    </script>
 
-    <!-- Application Logic -->
-    <script>
         function classApp() {
             return {
                 activeTab: 'students',
@@ -751,12 +733,11 @@
                 classes: JSON.parse(localStorage.getItem('class_app_classes')) || [],
                 activeClassId: localStorage.getItem('class_app_active_id') || null,
                 
-                security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: true, pin: '1234' },
+                security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: true, isLocked: true, pin: '7187' },
                 
-                isLocked: false,
-                enteredPin: '',
-                isMobilePinView: false,
-                mobileScannedPin: '',
+                isLocked: true,
+                unlockPasswordInput: '',
+                pollInterval: null,
 
                 isCloudSynced: false,
                 isCloudStatusText: 'Bulut Senkronize',
@@ -779,35 +760,22 @@
                 isFullscreen: false,
 
                 async initApp() {
-                    const params = new URLSearchParams(window.location.search);
-                    const scannedPin = params.get('pin');
-                    if (scannedPin) {
-                        this.mobileScannedPin = scannedPin;
-                        this.isMobilePinView = true;
-                    }
-
                     if (EMBEDDED_BIN_ID && EMBEDDED_API_KEY) {
                         await this.loadFromJsonBin();
-                    }
-
-                    if (!this.isMobilePinView) {
-                        const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
-                        this.security.pin = randomPin;
-                        this.security.enabled = true;
-                        this.saveSecuritySettings();
                     }
 
                     this.init();
                 },
 
                 init() {
-                    if (!this.isMobilePinView) {
-                        this.isLocked = true;
-                        this.$nextTick(() => this.generateQRCode());
+                    // Sayfa ilk açıldığında her zaman kilitli başlar
+                    this.isLocked = true;
+                    if (this.security.isLocked) {
+                        this.startLockPolling();
                     }
 
                     const today = new Date();
-                    if (today.getDay() === 5 && !sessionStorage.getItem('friday_modal_shown') && this.activeClassId && !this.isLocked && !this.isMobilePinView) {
+                    if (today.getDay() === 5 && !sessionStorage.getItem('friday_modal_shown') && this.activeClassId && !this.isLocked) {
                         this.fridayModalOpen = true;
                         sessionStorage.setItem('friday_modal_shown', 'true');
                     }
@@ -830,12 +798,10 @@
                         await window.jsonBinSync.save(binId, apiKey, payload);
                         this.isCloudSynced = true;
                         this.isCloudStatusText = 'Bulutla Senkronize';
-                        this.showToast('Başarıyla buluta kaydedildi!');
                     } catch (e) {
                         console.error(e);
                         this.isCloudSynced = false;
                         this.isCloudStatusText = 'Bulut Kayıt Hatası';
-                        this.showToast('Buluta kaydedilemedi!', 'error');
                     }
                 },
 
@@ -853,65 +819,91 @@
                         if (data && data.security) {
                             this.security = data.security;
                             localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                            if (this.security.isLocked) {
+                                this.isLocked = true;
+                                this.startLockPolling();
+                            } else {
+                                this.isLocked = false;
+                                this.stopLockPolling();
+                            }
                         }
                         this.isCloudSynced = true;
                         this.isCloudStatusText = 'Bulutla Senkronize';
-                        this.showToast('Buluttan veriler yüklendi!');
                     } catch (e) {
                         console.error(e);
                         this.isCloudSynced = false;
                         this.isCloudStatusText = 'Bulut Yükleme Hatası';
-                        this.showToast('Buluttan veri yüklenemedi!', 'error');
                     }
                 },
 
                 lockApp() {
-                    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
-                    this.security.pin = randomPin;
-                    this.saveSecuritySettings();
-
-                    this.isLocked = true;
-                    this.enteredPin = '';
-                    this.$nextTick(() => this.generateQRCode());
+                    this.remoteLockApp();
                 },
 
-                generateQRCode() {
-                    const qrContainer = document.getElementById('qrcode');
-                    if (!qrContainer) return;
-                    qrContainer.innerHTML = '';
-                    
-                    const uniqueNonce = Math.random().toString(36).substring(2, 10) + Date.now();
-                    const baseUrl = window.location.href.split('?')[0].split('#')[0];
-                    const unlockUrl = `${baseUrl}?pin=${this.security.pin}&nonce=${uniqueNonce}`;
-                    
-                    try {
-                        new QRCode(qrContainer, {
-                            text: unlockUrl,
-                            width: 140,
-                            height: 140,
-                            colorDark: "#1e293b",
-                            colorLight: "#f8fafc",
-                            correctLevel: QRCode.CorrectLevel.M
-                        });
-                    } catch (e) {
-                        qrContainer.innerHTML = '<span class="text-xs text-rose-500">QR Üretilemedi</span>';
+                async remoteLockApp() {
+                    this.security.isLocked = true;
+                    this.saveSecuritySettings();
+                    this.isLocked = true;
+                    this.startLockPolling();
+                    await this.saveToJsonBin();
+                    this.showToast('Akıllı tahta uzaktan kilitlendi.');
+                },
+
+                async remoteUnlockApp() {
+                    const correctPin = this.security.pin || '7187';
+                    if (this.unlockPasswordInput !== correctPin) {
+                        this.showToast('Hatalı şifre! (7187 olmalı)', 'error');
+                        return;
+                    }
+                    this.security.isLocked = false;
+                    this.saveSecuritySettings();
+                    this.isLocked = false;
+                    this.stopLockPolling();
+                    await this.saveToJsonBin();
+                    this.unlockPasswordInput = '';
+                    this.showToast('Akıllı tahta kilidi açıldı.');
+                },
+
+                async checkCloudLockStatus() {
+                    await this.loadFromJsonBin();
+                    if (!this.security.isLocked) {
+                        this.isLocked = false;
+                        this.stopLockPolling();
+                        this.showToast('Buluttan kilit açıldı!');
+                    } else {
+                        this.showToast('Akıllı tahta hala kilitli.', 'error');
                     }
                 },
 
-                unlockWithPin() {
-                    if (this.enteredPin === this.security.pin) {
-                        this.isLocked = false;
-                        this.enteredPin = '';
-                        this.showToast('Kilit başarıyla açıldı!');
-                    } else {
-                        this.showToast('Hatalı PIN kodu!', 'error');
-                        this.enteredPin = '';
+                startLockPolling() {
+                    if (this.pollInterval) return;
+                    this.pollInterval = setInterval(async () => {
+                        if (this.isLocked) {
+                            try {
+                                const data = await window.jsonBinSync.load(EMBEDDED_BIN_ID, EMBEDDED_API_KEY);
+                                if (data && data.security && !data.security.isLocked) {
+                                    this.security.isLocked = false;
+                                    localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                                    this.isLocked = false;
+                                    this.stopLockPolling();
+                                    this.showToast('Uzaktan kilit açıldı!');
+                                }
+                            } catch (e) {
+                                // Ignore network errors during polling
+                            }
+                        }
+                    }, 5000);
+                },
+
+                stopLockPolling() {
+                    if (this.pollInterval) {
+                        clearInterval(this.pollInterval);
+                        this.pollInterval = null;
                     }
                 },
 
                 saveSecuritySettings() {
                     localStorage.setItem('class_app_security', JSON.stringify(this.security));
-                    this.saveData();
                 },
 
                 toggleFullscreen() {
