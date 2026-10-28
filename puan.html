@@ -736,8 +736,8 @@
     <!-- JSONBin.io Sync API Module -->
     <script>
         // Kendi JSONBin Bin ID ve API Key bilgilerinizi buraya yazabilirsiniz.
-        const EMBEDDED_BIN_ID = '6ae24191ac6210605a59fcea'; 
-        const EMBEDDED_API_KEY = '$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq';
+        const EMBEDDED_BIN_ID = ''; 
+        const EMBEDDED_API_KEY = '';
 
         window.jsonBinSync = {
             async save(binId, apiKey, data) {
@@ -816,13 +816,6 @@
                 isFullscreen: false,
 
                 async initApp() {
-                    this.init();
-                    if (EMBEDDED_BIN_ID && EMBEDDED_API_KEY) {
-                        await this.loadFromJsonBin();
-                    }
-                },
-
-                init() {
                     const params = new URLSearchParams(window.location.search);
                     const scannedPin = params.get('pin');
                     if (scannedPin) {
@@ -830,11 +823,22 @@
                         this.isMobilePinView = true;
                     }
 
-                    // Site her açıldığında tamamen rastgele 4 haneli yeni şifre üret
-                    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
-                    this.security.pin = randomPin;
-                    this.security.enabled = true;
+                    if (EMBEDDED_BIN_ID && EMBEDDED_API_KEY) {
+                        await this.loadFromJsonBin();
+                    }
 
+                    // Sınıf her açıldığında ve mobilden şifre görüntülenmiyorsa kesinlikle yeni rastgele PIN üret
+                    if (!this.isMobilePinView) {
+                        const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+                        this.security.pin = randomPin;
+                        this.security.enabled = true;
+                        this.saveSecuritySettings();
+                    }
+
+                    this.init();
+                },
+
+                init() {
                     if (!this.isMobilePinView) {
                         this.isLocked = true;
                         this.$nextTick(() => this.generateQRCode());
