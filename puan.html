@@ -817,6 +817,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-puan-app';
         let db = null;
         let auth = null;
+        let initErrorMsg = "";
 
         try {
             let firebaseConfig = null;
@@ -825,7 +826,11 @@
             } else {
                 const savedConfig = localStorage.getItem('class_app_firebase_config');
                 if (savedConfig) {
-                    firebaseConfig = JSON.parse(savedConfig);
+                    try {
+                        firebaseConfig = JSON.parse(savedConfig);
+                    } catch (err) {
+                        initErrorMsg = "Firebase ayar JSON formatı geçersiz.";
+                    }
                 }
             }
 
@@ -843,14 +848,19 @@
                         }
                     }
                 });
+            } else {
+                initErrorMsg = "Firebase yapılandırması girilmedi.";
             }
         } catch (e) {
             console.error("Firebase init error:", e);
+            initErrorMsg = e.message;
         }
 
         window.firestoreSync = {
             async save(roomCode, data) {
-                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil. Lütfen Firebase bağlantınızı kontrol edin.");
+                if (!db || !auth) {
+                    throw new Error("Firebase aktif değil. " + (initErrorMsg || "Lütfen Yönetim sekmesinden geçerli Firebase config girdiğinizden ve Firebase konsolunda Firestore veritabanını aktif ettiğinizden emin olun."));
+                }
                 let user = auth.currentUser;
                 if (!user) {
                     await new Promise(resolve => {
@@ -861,7 +871,7 @@
                     });
                     user = auth.currentUser;
                 }
-                if (!user) throw new Error("Oturum açılamadı");
+                if (!user) throw new Error("Firebase oturum açma başarısız.");
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode.trim().toLowerCase());
                 await setDoc(docRef, {
@@ -872,7 +882,9 @@
             },
 
             async load(roomCode) {
-                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil. Lütfen Firebase bağlantınızı kontrol edin.");
+                if (!db || !auth) {
+                    throw new Error("Firebase aktif değil. " + (initErrorMsg || "Lütfen Yönetim sekmesinden geçerli Firebase config girdiğinizden ve Firebase konsolunda Firestore veritabanını aktif ettiğinizden emin olun."));
+                }
                 let user = auth.currentUser;
                 if (!user) {
                     await new Promise(resolve => {
