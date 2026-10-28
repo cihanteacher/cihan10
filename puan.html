@@ -21,8 +21,14 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col" x-data="classApp()" x-init="initApp()">
 
+    <!-- CLOUD SYNC STATUS BADGE -->
+    <div class="fixed top-3 right-3 z-50 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-medium">
+        <span class="w-2.5 h-2.5 rounded-full" :class="isCloudSynced ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
+        <span class="text-slate-600" x-text="isCloudStatusText"></span>
+    </div>
+
     <!-- CLASS SELECTION OVERLAY (Blurred background when no class is selected) -->
-    <div x-show="!activeClassId" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-xl p-4">
+    <div x-show="!activeClassId" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/80 backdrop-blur-xl p-4">
         <div class="bg-white rounded-3xl max-w-xl w-full p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden">
             <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-md">
                 <i class="fa-solid fa-school"></i>
@@ -747,6 +753,17 @@
         </div>
     </footer>
 
+    <!-- Firebase SDK Imports for Cloud Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebaseModules = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot
+        };
+    </script>
+
     <!-- JavaScript Application Logic -->
     <script>
         function classApp() {
@@ -761,6 +778,12 @@
                 enteredPin: '',
                 isMobilePinView: false,
                 mobileScannedPin: '',
+
+                isCloudSynced: false,
+                isCloudStatusText: 'Yerel Mod (Çevrimdışı)',
+                dbInstance: null,
+                authInstance: null,
+                appIdVal: typeof __app_id !== 'undefined' ? __app_id : 'sinif-puan-app-default',
 
                 newClassNameModal: '',
                 newClassName: '',
@@ -797,8 +820,53 @@
                     { name: 'Geç Kalma', points: 1 }
                 ],
 
-                initApp() {
+                async initApp() {
                     this.init();
+                    await this.initCloudSync();
+                },
+
+                async initCloudSync() {
+                    try {
+                        if (typeof __firebase_config !== 'undefined' && window.firebaseModules) {
+                            const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, onSnapshot } = window.firebaseModules;
+                            const firebaseConfig = JSON.parse(__firebase_config);
+                            const app = initializeApp(firebaseConfig);
+                            this.dbInstance = getFirestore(app);
+                            this.authInstance = getAuth(app);
+
+                            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                            if (token) {
+                                await signInWithCustomToken(this.authInstance, token);
+                            } else {
+                                await signInAnonymously(this.authInstance);
+                            }
+
+                            this.isCloudSynced = true;
+                            this.isCloudStatusText = 'Buluta Bağlı (Senkronize)';
+
+                            // Listen for real-time cloud updates
+                            const docRef = doc(this.dbInstance, 'artifacts', this.appIdVal, 'public', 'data', 'classroom_state');
+                            onSnapshot(docRef, (docSnap) => {
+                                if (docSnap.exists()) {
+                                    const data = docSnap.data();
+                                    if (data && data.classes) {
+                                        this.classes = data.classes;
+                                        localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
+                                    }
+                                    if (data && data.security) {
+                                        this.security = data.security;
+                                        localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                                    }
+                                }
+                            }, (error) => {
+                                console.error("Cloud sync snapshot error:", error);
+                                this.isCloudStatusText = 'Bulut Senkronizasyon Hatası';
+                            });
+                        }
+                    } catch (e) {
+                        console.log("Cloud sync not available, running on local storage mode.", e);
+                        this.isCloudStatusText = 'Yerel Depolama Modu';
+                    }
                 },
 
                 init() {
@@ -867,6 +935,7 @@
 
                 saveSecuritySettings() {
                     localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                    this.saveData();
                     this.showToast('Güvenlik ayarları kaydedildi.');
                 },
 
@@ -1160,6 +1229,19 @@
 
                 saveData() {
                     localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
+                    
+                    // Sync to Cloud Firestore if connected
+                    if (this.dbInstance && window.firebaseModules) {
+                        const { doc, setDoc } = window.firebaseModules;
+                        const docRef = doc(this.dbInstance, 'artifacts', this.appIdVal, 'public', 'data', 'classroom_state');
+                        setDoc(docRef, {
+                            classes: this.classes,
+                            security: this.security,
+                            updatedAt: new Date().toISOString()
+                        }).catch(err => {
+                            console.error("Cloud save error:", err);
+                        });
+                    }
                 },
 
                 get filteredStudents() {
@@ -1193,7 +1275,6 @@
                 },
 
                 get monthlyStats() {
-                    // For demonstration, using same structure over history
                     return this.weeklyStats;
                 }
             };
