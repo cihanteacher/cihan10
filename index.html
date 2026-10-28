@@ -474,7 +474,7 @@
                         </button>
                     </form>
 
-                    <!-- Görev Listesi (5 Madde Boyutunda, Fazlası İçin Kaydırma Çubuğu) -->
+                    <!-- Görev Listesi -->
                     <ul id="taskList" class="space-y-2 max-h-[230px] overflow-y-auto pr-1">
                         <!-- Javascript ile yüklenecek -->
                     </ul>
@@ -485,6 +485,9 @@
                         <i class="fa-solid fa-cloud-arrow-up text-xs animate-pulse"></i> JSON Bulut Senkronize
                     </span>
                     <div class="flex items-center gap-2">
+                        <button onclick="fetchTasksFromCloud()" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold transition-colors flex items-center gap-1" title="Buluttan güncel verileri çek">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Yenile
+                        </button>
                         <button onclick="updateJsonDatabase()" class="px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 font-bold transition-colors flex items-center gap-1" title="JSON veritabanını manuel olarak güncelle ve buluta kaydet">
                             <i class="fa-solid fa-rotate"></i> JSON Güncelle
                         </button>
@@ -827,7 +830,7 @@
 
         renderCalendar();
 
-        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU ---
+        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU (TARAYICI BELLEĞİ YOK) ---
         const BIN_ID = "6ae24191ac6210605a59fcea";
         const API_KEY = "$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq";
 
@@ -976,13 +979,7 @@
 
         fetchTasksFromCloud();
 
-        // Cihazlar arası anlık senkronizasyon için sayfa odaklandığında veya her 5 saniyede bir buluttan tazele
-        window.addEventListener('focus', () => {
-            fetchTasksFromCloud();
-        });
-        setInterval(() => {
-            fetchTasksFromCloud();
-        }, 600000);
+        // Arka plan yoklaması (polling) kaldırıldı. İstek limitini korumak için veri alışverişi sadece sayfa açılışında, görev eklendiğinde/silindiğinde veya "Yenile" / "JSON Güncelle" butonuna basıldığında gerçekleşir.
     </script>
 </body>
 </html>
