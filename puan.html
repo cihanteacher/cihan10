@@ -423,55 +423,38 @@
                 </form>
             </div>
 
-            <!-- Cloud Sync Center Card (Firestore Powered) -->
+            <!-- Cloud Sync Center Card (JSONBin.io Powered) -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div>
                     <div class="flex items-center justify-between mb-1">
                         <h3 class="font-bold text-lg text-slate-800">Bulut Senkronizasyonu</h3>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Firestore Bulut</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">JSONBin.io</span>
                     </div>
-                    <p class="text-xs text-slate-500 mb-4">Tüm cihazlar (tahta, telefon, tablet) arasında otomatik senkronizasyon.</p>
+                    <p class="text-xs text-slate-500 mb-3">jsonbin.io üzerinden tüm cihazlarınız arasında otomatik senkronizasyon.</p>
                     
                     <div class="space-y-3 mb-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Senkronizasyon Kodu</label>
-                            <input type="text" x-model="cloudSync.roomCode" @input="saveCloudSyncSettings()" placeholder="Örn: 7187" 
-                                   class="w-full px-3 py-2.5 bg-slate-50 text-indigo-700 font-bold border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">JSONBin Bin ID</label>
+                            <input type="text" x-model="jsonBin.binId" @input="saveJsonBinSettings()" placeholder="Örn: 65f3a..." 
+                                   class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">JSONBin API Key (Master Key)</label>
+                            <input type="password" x-model="jsonBin.apiKey" @input="saveJsonBinSettings()" placeholder="$2a$10$..." 
+                                   class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
                 </div>
 
                 <div class="space-y-2 pt-3 border-t border-slate-100">
                     <div class="grid grid-cols-2 gap-2">
-                        <button @click="loadFromCloudFirestore()" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                        <button @click="loadFromJsonBin()" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-cloud-arrow-down"></i> Buluttan Al
                         </button>
-                        <button @click="saveToCloudFirestore()" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                        <button @click="saveToJsonBin()" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-cloud-arrow-up"></i> Buluta Kaydet
                         </button>
                     </div>
-                </div>
-            </div>
-
-            <!-- Firebase Setup Card for GitHub Pages -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <h3 class="font-bold text-lg text-slate-800">GitHub Firebase Bağlantısı</h3>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">GitHub Pages Özel</span>
-                    </div>
-                    <p class="text-xs text-slate-500 mb-3">Kendi Firebase konsolunuzdan aldığınız `firebaseConfig` kodunu buraya yapıştırın.</p>
-                    
-                    <div>
-                        <textarea x-model="firebaseConfigInput" rows="3" placeholder='{ "apiKey": "...", "projectId": "...", ... }'
-                                  class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                    </div>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 mt-3">
-                    <button @click="saveFirebaseConfigSettings()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm">
-                        <i class="fa-solid fa-key"></i> Firebase Ayarlarını Kaydet ve Bağlan
-                    </button>
                 </div>
             </div>
 
@@ -808,100 +791,43 @@
         </div>
     </footer>
 
-    <!-- Firebase SDK Imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-puan-app';
-        let db = null;
-        let auth = null;
-        let initErrorMsg = "";
-
-        try {
-            let firebaseConfig = null;
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } else {
-                const savedConfig = localStorage.getItem('class_app_firebase_config');
-                if (savedConfig) {
-                    try {
-                        firebaseConfig = JSON.parse(savedConfig);
-                    } catch (err) {
-                        initErrorMsg = "Firebase ayar JSON formatı geçersiz.";
-                    }
+    <!-- JSONBin.io Sync API Module -->
+    <script>
+        window.jsonBinSync = {
+            async save(binId, apiKey, data) {
+                if (!binId || !apiKey) {
+                    throw new Error("Lütfen JSONBin Bin ID ve API Key girin.");
                 }
-            }
-
-            if (firebaseConfig) {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                onAuthStateChanged(auth, (user) => {
-                    if (!user) {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-                        } else {
-                            signInAnonymously(auth);
-                        }
-                    }
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId.trim()}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': apiKey.trim()
+                    },
+                    body: JSON.stringify(data)
                 });
-            } else {
-                initErrorMsg = "Firebase yapılandırması girilmedi.";
-            }
-        } catch (e) {
-            console.error("Firebase init error:", e);
-            initErrorMsg = e.message;
-        }
-
-        window.firestoreSync = {
-            async save(roomCode, data) {
-                if (!db || !auth) {
-                    throw new Error("Firebase aktif değil. " + (initErrorMsg || "Lütfen Yönetim sekmesinden geçerli Firebase config girdiğinizden ve Firebase konsolunda Firestore veritabanını aktif ettiğinizden emin olun."));
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error("Kayıt hatası: " + errText);
                 }
-                let user = auth.currentUser;
-                if (!user) {
-                    await new Promise(resolve => {
-                        const unsub = onAuthStateChanged(auth, u => {
-                            if (u) { unsub(); resolve(u); }
-                        });
-                        setTimeout(() => resolve(null), 3000);
-                    });
-                    user = auth.currentUser;
-                }
-                if (!user) throw new Error("Firebase oturum açma başarısız.");
-
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode.trim().toLowerCase());
-                await setDoc(docRef, {
-                    payload: JSON.stringify(data),
-                    updatedAt: new Date().toISOString(),
-                    userId: user.uid
-                });
+                return await res.json();
             },
 
-            async load(roomCode) {
-                if (!db || !auth) {
-                    throw new Error("Firebase aktif değil. " + (initErrorMsg || "Lütfen Yönetim sekmesinden geçerli Firebase config girdiğinizden ve Firebase konsolunda Firestore veritabanını aktif ettiğinizden emin olun."));
+            async load(binId, apiKey) {
+                if (!binId || !apiKey) {
+                    throw new Error("Lütfen JSONBin Bin ID ve API Key girin.");
                 }
-                let user = auth.currentUser;
-                if (!user) {
-                    await new Promise(resolve => {
-                        const unsub = onAuthStateChanged(auth, u => {
-                            if (u) { unsub(); resolve(u); }
-                        });
-                        setTimeout(() => resolve(null), 3000);
-                    });
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId.trim()}/latest`, {
+                    headers: {
+                        'X-Master-Key': apiKey.trim()
+                    }
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error("Yükleme hatası: " + errText);
                 }
-
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomCode.trim().toLowerCase());
-                const snapshot = await getDoc(docRef);
-                if (snapshot.exists()) {
-                    const docData = snapshot.data();
-                    return JSON.parse(docData.payload);
-                }
-                return null;
+                const json = await res.json();
+                return json.record;
             }
         };
     </script>
@@ -916,8 +842,7 @@
                 activeClassId: localStorage.getItem('class_app_active_id') || null,
                 
                 security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: false, pin: '1234' },
-                cloudSync: JSON.parse(localStorage.getItem('class_app_cloud_sync')) || { roomCode: '7187' },
-                firebaseConfigInput: localStorage.getItem('class_app_firebase_config') || '',
+                jsonBin: JSON.parse(localStorage.getItem('class_app_jsonbin')) || { binId: '', apiKey: '' },
                 
                 isLocked: false,
                 enteredPin: '',
@@ -925,7 +850,7 @@
                 mobileScannedPin: '',
 
                 isCloudSynced: false,
-                isCloudStatusText: 'Bulut Kodu Bekleniyor',
+                isCloudStatusText: 'JSONBin Bağlantısı Bekleniyor',
 
                 newClassNameModal: '',
                 newClassName: '',
@@ -964,10 +889,9 @@
 
                 async initApp() {
                     this.init();
-                    if (!this.cloudSync.roomCode) {
-                        this.cloudSync.roomCode = '7187';
+                    if (this.jsonBin.binId.trim() && this.jsonBin.apiKey.trim()) {
+                        await this.loadFromJsonBin();
                     }
-                    await this.loadFromCloudFirestore();
                 },
 
                 init() {
@@ -994,13 +918,13 @@
                     });
                 },
 
-                async saveToCloudFirestore() {
-                    if (!this.cloudSync.roomCode.trim()) {
-                        this.showToast('Lütfen geçerli bir Senkronizasyon Kodu girin!', 'error');
+                async saveToJsonBin() {
+                    if (!this.jsonBin.binId.trim() || !this.jsonBin.apiKey.trim()) {
+                        this.showToast('Lütfen Bin ID ve API Key girin!', 'error');
                         this.activeTab = 'management';
                         return;
                     }
-                    if (!window.firestoreSync) {
+                    if (!window.jsonBinSync) {
                         this.showToast('Bulut modülü yüklenemedi.', 'error');
                         return;
                     }
@@ -1010,7 +934,7 @@
                             classes: this.classes,
                             security: this.security
                         };
-                        await window.firestoreSync.save(this.cloudSync.roomCode, payload);
+                        await window.jsonBinSync.save(this.jsonBin.binId, this.jsonBin.apiKey, payload);
                         this.isCloudSynced = true;
                         this.isCloudStatusText = 'Bulutla Senkronize';
                         this.showToast('Tüm veriler buluta başarıyla kaydedildi!');
@@ -1022,12 +946,12 @@
                     }
                 },
 
-                async loadFromCloudFirestore() {
-                    if (!this.cloudSync.roomCode.trim()) return;
-                    if (!window.firestoreSync) return;
+                async loadFromJsonBin() {
+                    if (!this.jsonBin.binId.trim() || !this.jsonBin.apiKey.trim()) return;
+                    if (!window.jsonBinSync) return;
                     try {
                         this.isCloudStatusText = 'Buluttan Alınıyor...';
-                        const data = await window.firestoreSync.load(this.cloudSync.roomCode);
+                        const data = await window.jsonBinSync.load(this.jsonBin.binId, this.jsonBin.apiKey);
                         if (data && data.classes) {
                             this.classes = data.classes;
                             localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
@@ -1048,22 +972,16 @@
                 },
 
                 async quickSyncCloud() {
-                    if (!this.cloudSync.roomCode.trim()) {
-                        this.showToast('Önce Yönetim sekmesinden Senkronizasyon Kodu girin!', 'error');
+                    if (!this.jsonBin.binId.trim() || !this.jsonBin.apiKey.trim()) {
+                        this.showToast('Önce Yönetim sekmesinden Bin ID ve API Key girin!', 'error');
                         this.activeTab = 'management';
                         return;
                     }
-                    await this.loadFromCloudFirestore();
+                    await this.loadFromJsonBin();
                 },
 
-                saveCloudSyncSettings() {
-                    localStorage.setItem('class_app_cloud_sync', JSON.stringify(this.cloudSync));
-                },
-
-                saveFirebaseConfigSettings() {
-                    localStorage.setItem('class_app_firebase_config', this.firebaseConfigInput);
-                    this.showToast('Firebase ayarları kaydedildi. Sayfa yenileniyor...');
-                    setTimeout(() => window.location.reload(), 1500);
+                saveJsonBinSettings() {
+                    localStorage.setItem('class_app_jsonbin', JSON.stringify(this.jsonBin));
                 },
 
                 lockApp() {
@@ -1403,9 +1321,8 @@
                 saveData() {
                     localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
                     
-                    // Auto push to Cloud Firestore if room code exists
-                    if (this.cloudSync.roomCode.trim()) {
-                        this.saveToCloudFirestore();
+                    if (this.jsonBin.binId.trim() && this.jsonBin.apiKey.trim()) {
+                        this.saveToJsonBin();
                     }
                 },
 
