@@ -874,7 +874,7 @@
                     const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
                     this.security.pin = randomPin;
                     this.saveSecuritySettings();
-                    this.showToast('Rastgele şifre üretildi: ' + randomPin);
+                    this.showToast('Rastgele şifre başarıyla üretildi.');
                 },
 
                 toggleFullscreen() {
@@ -1127,8 +1127,9 @@
 
                 importData(event) {
                     const fileReader = new FileReader();
-                    if (event.target.files[0]) {
-                        fileReader.readAsText(event.target.files[0], "UTF-8");
+                    const file = event.target.files[0];
+                    if (file) {
+                        fileReader.readAsText(file, "UTF-8");
                         fileReader.onload = (e) => {
                             try {
                                 const parsed = JSON.parse(e.target.result);
@@ -1136,6 +1137,17 @@
                                     this.classes = parsed;
                                     this.saveData();
                                     this.showToast('Yedek başarıyla yüklendi!');
+                                    event.target.value = '';
+                                } else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.classes)) {
+                                    this.classes = parsed.classes;
+                                    this.saveData();
+                                    this.showToast('Yedek başarıyla yüklendi!');
+                                    event.target.value = '';
+                                } else if (parsed && typeof parsed === 'object' && parsed.id && parsed.name) {
+                                    this.classes.push(parsed);
+                                    this.saveData();
+                                    this.showToast('Sınıf yedeği başarıyla eklendi!');
+                                    event.target.value = '';
                                 } else {
                                     this.showToast('Geçersiz dosya formatı!', 'error');
                                 }
