@@ -25,6 +25,9 @@
     <div class="fixed top-3 right-3 z-50 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-medium">
         <span class="w-2.5 h-2.5 rounded-full" :class="isCloudSynced ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
         <span class="text-slate-600" x-text="isCloudStatusText"></span>
+        <button @click="quickSyncCloud()" class="ml-1 px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-md text-[10px] font-semibold transition-all" title="Hemen Senkronize Et">
+            <i class="fa-solid fa-rotate"></i>
+        </button>
     </div>
 
     <!-- CLASS SELECTION OVERLAY (Blurred background when no class is selected) -->
@@ -151,7 +154,7 @@
                 <button @click="activeTab = 'management'" 
                         :class="activeTab === 'management' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
                         class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i> Öğrenci & Sınıf Yönetimi
+                    <i class="fa-solid fa-user-gear"></i> Yönetim & Bulut
                 </button>
             </div>
 
@@ -387,8 +390,8 @@
             </div>
         </div>
 
-        <!-- TAB 3: STUDENT & CLASS MANAGEMENT -->
-        <div x-show="activeTab === 'management'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+        <!-- TAB 3: STUDENT & CLASS MANAGEMENT & CLOUD SYNC -->
+        <div x-show="activeTab === 'management'" x-cloak class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <!-- Add Single Student Card -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                 <h3 class="font-bold text-lg text-slate-800 mb-1">Yeni Öğrenci Ekle</h3>
@@ -418,6 +421,37 @@
                         <i class="fa-solid fa-users"></i> Toplu Ekle
                     </button>
                 </form>
+            </div>
+
+            <!-- Cloud Sync Center Card (NEW for GitHub Pages & cross-device) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="font-bold text-lg text-slate-800">Bulut Senkronizasyonu</h3>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">GitHub Uyumlu</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-4">Tüm cihazlar (bilgisayar, tablet) arası verileri senkronize edin.</p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Senkronizasyon Odası / Kodu</label>
+                            <input type="text" x-model="cloudSync.roomCode" @input="saveCloudSyncSettings()" placeholder="Örn: " 
+                                   class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <span class="text-[10px] text-slate-400 mt-1 block">Aynı kodu tablete ve bilgisayara girerek verileri eşitleyin.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-3 border-t border-slate-100">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @click="loadFromCloudKV()" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Buluttan Al
+                        </button>
+                        <button @click="saveToCloudKV()" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Buluta Kaydet
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Class Management Card -->
@@ -753,17 +787,6 @@
         </div>
     </footer>
 
-    <!-- Firebase SDK Imports for Cloud Sync -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        window.firebaseModules = {
-            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot
-        };
-    </script>
-
     <!-- JavaScript Application Logic -->
     <script>
         function classApp() {
@@ -774,16 +797,15 @@
                 activeClassId: localStorage.getItem('class_app_active_id') || null,
                 
                 security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: false, pin: '1234' },
+                cloudSync: JSON.parse(localStorage.getItem('class_app_cloud_sync')) || { roomCode: '' },
+                
                 isLocked: false,
                 enteredPin: '',
                 isMobilePinView: false,
                 mobileScannedPin: '',
 
                 isCloudSynced: false,
-                isCloudStatusText: 'Yerel Mod (Çevrimdışı)',
-                dbInstance: null,
-                authInstance: null,
-                appIdVal: typeof __app_id !== 'undefined' ? __app_id : 'sinif-puan-app-default',
+                isCloudStatusText: 'Yerel Mod (Bulut Kodu Girilmedi)',
 
                 newClassNameModal: '',
                 newClassName: '',
@@ -822,50 +844,8 @@
 
                 async initApp() {
                     this.init();
-                    await this.initCloudSync();
-                },
-
-                async initCloudSync() {
-                    try {
-                        if (typeof __firebase_config !== 'undefined' && window.firebaseModules) {
-                            const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, onSnapshot } = window.firebaseModules;
-                            const firebaseConfig = JSON.parse(__firebase_config);
-                            const app = initializeApp(firebaseConfig);
-                            this.dbInstance = getFirestore(app);
-                            this.authInstance = getAuth(app);
-
-                            const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                            if (token) {
-                                await signInWithCustomToken(this.authInstance, token);
-                            } else {
-                                await signInAnonymously(this.authInstance);
-                            }
-
-                            this.isCloudSynced = true;
-                            this.isCloudStatusText = 'Buluta Bağlı (Senkronize)';
-
-                            // Listen for real-time cloud updates
-                            const docRef = doc(this.dbInstance, 'artifacts', this.appIdVal, 'public', 'data', 'classroom_state');
-                            onSnapshot(docRef, (docSnap) => {
-                                if (docSnap.exists()) {
-                                    const data = docSnap.data();
-                                    if (data && data.classes) {
-                                        this.classes = data.classes;
-                                        localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
-                                    }
-                                    if (data && data.security) {
-                                        this.security = data.security;
-                                        localStorage.setItem('class_app_security', JSON.stringify(this.security));
-                                    }
-                                }
-                            }, (error) => {
-                                console.error("Cloud sync snapshot error:", error);
-                                this.isCloudStatusText = 'Bulut Senkronizasyon Hatası';
-                            });
-                        }
-                    } catch (e) {
-                        console.log("Cloud sync not available, running on local storage mode.", e);
-                        this.isCloudStatusText = 'Yerel Depolama Modu';
+                    if (this.cloudSync.roomCode.trim()) {
+                        await this.loadFromCloudKV();
                     }
                 },
 
@@ -891,6 +871,79 @@
                     document.addEventListener('fullscreenchange', () => {
                         this.isFullscreen = !!document.fullscreenElement;
                     });
+                },
+
+                async saveToCloudKV() {
+                    if (!this.cloudSync.roomCode.trim()) {
+                        this.showToast('Lütfen bir Senkronizasyon Kodu girin!', 'error');
+                        return;
+                    }
+                    const bucket = this.cloudSync.roomCode.trim();
+                    const payload = {
+                        classes: this.classes,
+                        security: this.security,
+                        updatedAt: new Date().toISOString()
+                    };
+                    try {
+                        this.isCloudStatusText = 'Buluta Kaydediliyor...';
+                        const response = await fetch(`https://kvdb.io/${bucket}/classroom_data`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (response.ok) {
+                            this.isCloudSynced = true;
+                            this.isCloudStatusText = 'Bulutla Senkronize';
+                            this.showToast('Veriler buluta başarıyla kaydedildi!');
+                        } else {
+                            throw new Error('Sunucu hatası');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.isCloudStatusText = 'Bulut Kayıt Hatası';
+                        this.showToast('Buluta kaydedilemedi!', 'error');
+                    }
+                },
+
+                async loadFromCloudKV() {
+                    if (!this.cloudSync.roomCode.trim()) return;
+                    const bucket = this.cloudSync.roomCode.trim();
+                    try {
+                        this.isCloudStatusText = 'Buluttan Yükleniyor...';
+                        const response = await fetch(`https://kvdb.io/${bucket}/classroom_data`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.classes) {
+                                this.classes = data.classes;
+                                localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
+                            }
+                            if (data && data.security) {
+                                this.security = data.security;
+                                localStorage.setItem('class_app_security', JSON.stringify(this.security));
+                            }
+                            this.isCloudSynced = true;
+                            this.isCloudStatusText = 'Bulutla Senkronize';
+                        } else {
+                            this.isCloudStatusText = 'Bulut Verisi Yok';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        this.isCloudStatusText = 'Bağlantı Hatası';
+                    }
+                },
+
+                async quickSyncCloud() {
+                    if (!this.cloudSync.roomCode.trim()) {
+                        this.showToast('Önce Yönetim sekmesinden Senkronizasyon Kodu girin!', 'error');
+                        this.activeTab = 'management';
+                        return;
+                    }
+                    await this.loadFromCloudKV();
+                    this.showToast('Bulut senkronizasyonu güncellendi!');
+                },
+
+                saveCloudSyncSettings() {
+                    localStorage.setItem('class_app_cloud_sync', JSON.stringify(this.cloudSync));
                 },
 
                 lockApp() {
@@ -943,7 +996,7 @@
                     const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
                     this.security.pin = randomPin;
                     this.saveSecuritySettings();
-                    this.showToast('Rastgele şifre başarıyla üretildi.');
+                    this.showToast('Rastgele şifre üretildi.');
                 },
 
                 toggleFullscreen() {
@@ -1230,17 +1283,9 @@
                 saveData() {
                     localStorage.setItem('class_app_classes', JSON.stringify(this.classes));
                     
-                    // Sync to Cloud Firestore if connected
-                    if (this.dbInstance && window.firebaseModules) {
-                        const { doc, setDoc } = window.firebaseModules;
-                        const docRef = doc(this.dbInstance, 'artifacts', this.appIdVal, 'public', 'data', 'classroom_state');
-                        setDoc(docRef, {
-                            classes: this.classes,
-                            security: this.security,
-                            updatedAt: new Date().toISOString()
-                        }).catch(err => {
-                            console.error("Cloud save error:", err);
-                        });
+                    // Auto push to cloud KV if room code exists
+                    if (this.cloudSync.roomCode.trim()) {
+                        this.saveToCloudKV();
                     }
                 },
 
