@@ -434,10 +434,10 @@
                     
                     <div class="space-y-3 mb-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Senkronizasyon Kodu (Sabit)</label>
-                            <input type="password" x-model="cloudSync.roomCode" readonly 
-                                   class="w-full px-3 py-2.5 bg-slate-100 text-indigo-700 font-bold border border-slate-200 rounded-xl text-sm font-mono focus:outline-none cursor-not-allowed">
-                            <span class="text-[10px] text-slate-400 mt-1 block">Bulut kodunuz <b>7187</b> olarak sabitlenmiştir. Tüm cihazlarınız bu kodla eşleşir.</span>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Senkronizasyon Kodu / Oda Adı</label>
+                            <input type="text" x-model="cloudSync.roomCode" @input="saveCloudSyncSettings()" placeholder="Örn: sinif7a-gizli-kod"
+                                   class="w-full px-3 py-2.5 bg-slate-50 text-indigo-700 font-bold border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <span class="text-[10px] text-slate-400 mt-1 block">Aynı kodu giren tüm cihazlarınız bu oda üzerinden eşleşir.</span>
                         </div>
                     </div>
                 </div>
@@ -796,11 +796,19 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-puan-app';
         let db = null;
         let auth = null;
-        let firebaseReady = false;
 
         try {
-            if (typeof __firebase_config !== 'undefined') {
-                const firebaseConfig = JSON.parse(__firebase_config);
+            let firebaseConfig = null;
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                const savedConfig = localStorage.getItem('class_app_firebase_config');
+                if (savedConfig) {
+                    firebaseConfig = JSON.parse(savedConfig);
+                }
+            }
+
+            if (firebaseConfig) {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -821,7 +829,7 @@
 
         window.firestoreSync = {
             async save(roomCode, data) {
-                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil");
+                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil. Lütfen Firebase bağlantınızı kontrol edin.");
                 let user = auth.currentUser;
                 if (!user) {
                     await new Promise(resolve => {
@@ -843,7 +851,7 @@
             },
 
             async load(roomCode) {
-                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil");
+                if (!db || !auth) throw new Error("Bulut veritabanı aktif değil. Lütfen Firebase bağlantınızı kontrol edin.");
                 let user = auth.currentUser;
                 if (!user) {
                     await new Promise(resolve => {
@@ -875,7 +883,7 @@
                 activeClassId: localStorage.getItem('class_app_active_id') || null,
                 
                 security: JSON.parse(localStorage.getItem('class_app_security')) || { enabled: false, pin: '1234' },
-                cloudSync: { roomCode: '7187' },
+                cloudSync: JSON.parse(localStorage.getItem('class_app_cloud_sync')) || { roomCode: '7187' },
                 
                 isLocked: false,
                 enteredPin: '',
@@ -922,7 +930,9 @@
 
                 async initApp() {
                     this.init();
-                    this.cloudSync.roomCode = '7187';
+                    if (!this.cloudSync.roomCode) {
+                        this.cloudSync.roomCode = '7187';
+                    }
                     await this.loadFromCloudFirestore();
                 },
 
@@ -1013,7 +1023,6 @@
                 },
 
                 saveCloudSyncSettings() {
-                    this.cloudSync.roomCode = '7187';
                     localStorage.setItem('class_app_cloud_sync', JSON.stringify(this.cloudSync));
                 },
 
