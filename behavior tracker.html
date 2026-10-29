@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sınıf İçi Davranış Değerlendirme</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        /* Özel kaydırma çubuğu gizleme */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col" x-data="appData()" x-init="initApp()">
+
+    <!-- ANA EKRAN (SINIFLAR) -->
+    <div x-show="currentView === 'home'" class="flex-1 flex flex-col max-w-md mx-auto w-full p-4 pb-24">
+        <!-- Üst Başlık -->
+        <header class="bg-indigo-600 text-white p-5 rounded-3xl shadow-lg mb-4 flex flex-col items-center justify-center text-center">
+            <h1 class="text-xl font-bold tracking-tight">Sınıf Davranış Takip</h1>
+            <p class="text-xs text-indigo-100 mt-0.5">Çevrimdışı Tablet ve iPhone Asistanı</p>
+        </header>
+
+        <!-- Canlı Saat ve Tarih Kartı -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-5 text-center">
+            <div class="text-3xl font-extrabold text-indigo-600 tracking-wider" x-text="currentTime"></div>
+            <div class="text-sm font-medium text-slate-600 mt-1 capitalize" x-text="currentDate"></div>
+        </div>
+
+        <!-- Sınıf Listesi Başlığı ve Ekle Butonu -->
+        <div class="flex items-center justify-between mb-3 px-1">
+            <h2 class="text-lg font-bold text-slate-800">Sınıflarım</h2>
+            <button @click="openAddClassModal = true" class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-indigo-700 active:scale-95 transition flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Yeni Sınıf
+            </button>
+        </div>
+
+        <!-- Sınıf Grid Listesi -->
+        <div class="flex-1 overflow-y-auto no-scrollbar">
+            <template x-if="classes.length === 0">
+                <div class="flex flex-col items-center justify-center h-64 text-center px-6">
+                    <svg class="w-16 h-16 text-slate-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.005 11.5c.055.25.132.497.23.74m13.548-.74a10.457 10.457 0 00.23-.74"/></svg>
+                    <p class="text-slate-600 font-medium">Henüz kayıtlı sınıfınız yok.</p>
+                    <p class="text-xs text-slate-400 mt-1">Yukarıdaki butondan sınıf ekleyerek başlayın.</p>
+                </div>
+            </template>
+
+            <div class="grid grid-cols-2 gap-3.5">
+                <template x-for="c in classes" :key="c.id">
+                    <div @click="selectClass(c)" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center active:scale-95 transition cursor-pointer hover:border-indigo-200">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 font-bold text-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                        </div>
+                        <span class="font-bold text-slate-800 text-base" x-text="c.name"></span>
+                        <span class="text-xs text-slate-400 mt-0.5" x-text="getStudentCount(c.id) + ' Öğrenci'"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÖĞRENCİ LİSTESİ EKRANI -->
+    <div x-show="currentView === 'studentList'" class="flex-1 flex flex-col max-w-md mx-auto w-full p-4 pb-24" style="display: none;">
+        <!-- Üst Bar -->
+        <header class="bg-indigo-600 text-white p-4 rounded-3xl shadow-lg mb-4 flex items-center justify-between">
+            <button @click="currentView = 'home'" class="p-2 rounded-xl bg-indigo-700/50 hover:bg-indigo-700 active:scale-95 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            </button>
+            <div class="text-center">
+                <h1 class="text-lg font-bold tracking-tight" x-text="activeClassName"></h1>
+                <p class="text-xs text-indigo-100">Öğrenci Değerlendirme</p>
+            </div>
+            <!-- TXT Dosya İçe Aktar Butonu -->
+            <label class="p-2 rounded-xl bg-indigo-700/50 hover:bg-indigo-700 active:scale-95 transition cursor-pointer" title="TXT'den Yükle">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                <input type="file" accept=".txt" class="hidden" @change="importTxtFile($event)">
+            </label>
+        </header>
+
+        <!-- Arama ve Sıralama Çubuğu -->
+        <div class="flex gap-2 mb-4">
+            <div class="relative flex-1">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                </span>
+                <input type="text" x-model="searchQuery" placeholder="Öğrenci ara..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 shadow-sm">
+            </div>
+            <!-- Sıralama Dropdown -->
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" class="h-full px-3 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-50 shadow-sm">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                </button>
+                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-20 text-sm">
+                    <button @click="setSort('NUMBER_ASC'); open=false" class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-slate-700 font-medium">Öğrenci No'ya Göre</button>
+                    <button @click="setSort('POINTS_HIGH_LOW'); open=false" class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-slate-700 font-medium">Yüksekten Düşüğe Puan</button>
+                    <button @click="setSort('POINTS_LOW_HIGH'); open=false" class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-slate-700 font-medium">Düşükten Yükseğe Puan</button>
+                    <button @click="setSort('ALPHABETICAL'); open=false" class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-slate-700 font-medium">Alfabetik Sırala</button>
+                    <button @click="setSort('RECENT_SCORED'); open=false" class="w-full text-left px-4 py-2 hover:bg-indigo-50 text-slate-700 font-medium">En Son Puan Verilenler</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Öğrenci Grid Listesi -->
+        <div class="flex-1 overflow-y-auto no-scrollbar pb-16">
+            <template x-if="filteredStudents.length === 0">
+                <div class="flex flex-col items-center justify-center h-64 text-center px-6">
+                    <svg class="w-16 h-16 text-slate-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+                    <p class="text-slate-600 font-medium" x-text="searchQuery ? 'Aradığınız kriterde öğrenci bulunamadı.' : 'Bu sınıfta henüz öğrenci yok.'"></p>
+                    <p class="text-xs text-slate-400 mt-1">Sağ alttan ekleyebilir veya üstten TXT yükleyebilirsiniz.</p>
+                </div>
+            </template>
+
+            <div class="grid grid-cols-2 gap-3">
+                <template x-for="s in filteredStudents" :key="s.id">
+                    <div 
+                        @click="openQuickScore(s)"
+                        @touchstart="startLongPress(s)"
+                        @touchend="cancelLongPress()"
+                        @mousedown="startLongPress(s)"
+                        @mouseup="cancelLongPress()"
+                        @mouseleave="cancelLongPress()"
+                        class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center cursor-pointer active:scale-95 transition relative hover:border-indigo-200"
+                    >
+                        <!-- Puan Rozetleri -->
+                        <div class="w-full flex justify-between items-center px-1 mb-1.5 text-xs font-bold">
+                            <span class="text-emerald-600" x-text="'+' + s.pos"></span>
+                            <span class="text-rose-600" x-text="'-' + s.neg"></span>
+                        </div>
+
+                        <!-- Profil Fotoğrafı / Avatar -->
+                        <div class="w-14 h-14 rounded-full bg-slate-100 overflow-hidden mb-2 flex items-center justify-center border-2 border-slate-50 shadow-inner">
+                            <template x-if="s.photo">
+                                <img :src="s.photo" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!s.photo">
+                                <svg class="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                            </template>
+                        </div>
+
+                        <span class="text-xs font-medium text-slate-400" x-text="'No: ' + s.number"></span>
+                        <span class="font-bold text-slate-800 text-sm mt-0.5 truncate w-full" x-text="s.name"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Öğrenci Ekleme Floating Butonu -->
+        <button @click="openAddStudentModal = true" class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition z-10">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+        </button>
+    </div>
+
+    <!-- ÖĞRENCİ DETAY VE GEÇMİŞ EKRANI -->
+    <div x-show="currentView === 'studentDetail'" class="flex-1 flex flex-col max-w-md mx-auto w-full p-4 pb-24" style="display: none;">
+        <header class="bg-indigo-600 text-white p-4 rounded-3xl shadow-lg mb-4 flex items-center justify-between">
+            <button @click="currentView = 'studentList'" class="p-2 rounded-xl bg-indigo-700/50 hover:bg-indigo-700 active:scale-95 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+            </button>
+            <div class="text-center truncate px-2">
+                <h1 class="text-base font-bold tracking-tight truncate" x-text="activeStudent ? activeStudent.name : ''"></h1>
+                <p class="text-xs text-indigo-100" x-text="'No: ' + (activeStudent ? activeStudent.number : '')"></p>
+            </div>
+            <div class="w-9"></div>
+        </header>
+
+        <!-- Öğrenci Profil Bilgi Kartı -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 flex items-center justify-between">
+            <div class="flex items-center gap-3.5">
+                <div class="relative w-16 h-16 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center border-2 border-indigo-100 shadow-inner group cursor-pointer" @click="$refs.detailPhotoInput.click()">
+                    <template x-if="activeStudent && activeStudent.photo">
+                        <img :src="activeStudent.photo" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="activeStudent && !activeStudent.photo">
+                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                    </template>
+                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition text-white text-[10px] font-semibold">Değiştir</div>
+                    <input type="file" accept="image/*" class="hidden" x-ref="detailPhotoInput" @change="updateStudentPhoto($event)">
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-800 text-base" x-text="activeStudent ? activeStudent.name : ''"></h2>
+                    <p class="text-xs text-slate-400">Fotoğrafı değiştirmek için dokunun</p>
+                </div>
+            </div>
+
+            <!-- Toplam Puan Rozetleri -->
+            <div class="flex gap-2">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5 text-center">
+                    <span class="block text-[10px] font-bold text-emerald-600 uppercase">Artı</span>
+                    <span class="text-sm font-extrabold text-emerald-700" x-text="activeStudentStats.pos"></span>
+                </div>
+                <div class="bg-rose-50 border border-rose-100 rounded-xl px-3 py-1.5 text-center">
+                    <span class="block text-[10px] font-bold text-rose-600 uppercase">Eksi</span>
+                    <span class="text-sm font-extrabold text-rose-700" x-text="activeStudentStats.neg"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geçmiş Davranışlar Başlığı -->
+        <h3 class="font-bold text-slate-800 text-sm mb-2.5 px-1">Davranış Geçmişi</h3>
+
+        <!-- Geçmiş Listesi -->
+        <div class="flex-1 overflow-y-auto no-scrollbar space-y-2">
+            <template x-if="activeStudentLogs.length === 0">
+                <div class="flex flex-col items-center justify-center h-48 text-center px-6">
+                    <p class="text-slate-500 font-medium text-sm">Henüz davranış kaydı bulunmuyor.</p>
+                </div>
+            </template>
+            <template x-for="log in activeStudentLogs" :key="log.id">
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <p class="font-semibold text-slate-800 text-sm" x-text="log.desc"></p>
+                        <p class="text-[11px] text-slate-400 mt-0.5" x-text="formatDate(log.timestamp)"></p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-sm" :class="log.points > 0 ? 'text-emerald-600' : 'text-rose-600'" x-text="log.points > 0 ? '+' + log.points : log.points"></span>
+                        <button @click="deleteLog(log.id)" class="text-slate-300 hover:text-rose-500 p-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- MODAL: YENİ SINIF EKLE -->
+    <div x-show="openAddClassModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl space-y-4" @click.away="openAddClassModal = false">
+            <h3 class="text-lg font-bold text-slate-800 text-center">Yeni Sınıf Ekle</h3>
+            <input type="text" x-model="newClassName" placeholder="Sınıf Adı (Örn: 8-B)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            <div class="flex gap-2 pt-1">
+                <button @click="openAddClassModal = false" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold text-sm active:scale-95 transition">İptal</button>
+                <button @click="addClass" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm active:scale-95 transition shadow-sm">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: YENİ ÖĞRENCİ EKLE -->
+    <div x-show="openAddStudentModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl space-y-4" @click.away="openAddStudentModal = false">
+            <h3 class="text-lg font-bold text-slate-800 text-center">Yeni Öğrenci Ekle</h3>
+            <input type="text" x-model="newStudentNumber" placeholder="Okul Numarası" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            <input type="text" x-model="newStudentName" placeholder="Ad Soyad" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500">
+            
+            <!-- Fotoğraf Seçimi -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1">Profil Fotoğrafı (İsteğe Bağlı)</label>
+                <input type="file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" @change="handleNewStudentPhoto($event)">
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button @click="openAddStudentModal = false" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold text-sm active:scale-95 transition">İptal</button>
+                <button @click="addStudent" class="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm active:scale-95 transition shadow-sm">Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HIZLI PUANLAMA (QUICK SCORE) -->
+    <div x-show="openQuickScoreModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" style="display: none;">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-sm shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar space-y-4" @click.away="openQuickScoreModal = false">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800" x-text="selectedStudent ? selectedStudent.name : ''"></h3>
+                    <p class="text-xs text-slate-400" x-text="'No: ' + (selectedStudent ? selectedStudent.number : '')"></p>
+                </div>
+                <button @click="openQuickScoreModal = false" class="p-1.5 rounded-full bg-slate-100 text-slate-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Detaylı Puan ve Geçmiş Butonu -->
+            <button @click="goToDetailFromModal()" class="w-full py-3 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-sm rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition border border-indigo-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h16.5M3.75 3v11.25A2.25 2.25 0 006 16.5h12.75M12 15.75h3.75m-3.75 3h3.75m-3.75-3v3m-3-13.5v13.5"/></svg>
+                Detaylı Puan ve Geçmiş
+            </button>
+
+            <!-- OLUMLU DAVRANIŞLAR (+1) -->
+            <div>
+                <span class="block text-xs font-bold text-emerald-600 uppercase mb-2">Olumlu Davranışlar (+1)</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <template x-for="crit in positiveCriteria">
+                        <button @click="givePoint(crit, 1, 'POSITIVE')" class="py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs rounded-xl active:scale-95 transition border border-emerald-100 truncate" x-text="crit + ' (+1)'"></button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- OLUMSUZ DAVRANIŞLAR (-1) -->
+            <div>
+                <span class="block text-xs font-bold text-rose-600 uppercase mb-2">Olumsuz Davranışlar (-1)</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <template x-for="crit in negativeCriteria">
+                        <button @click="givePoint(crit, -1, 'NEGATIVE')" class="py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold text-xs rounded-xl active:scale-95 transition border border-rose-100 truncate" x-text="crit + ' (-1)'"></button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SİLME ONAYI -->
+    <div x-show="openDeleteModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4" style="display: none;">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl space-y-4 text-center" @click.away="openDeleteModal = false">
+            <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Öğrenciyi Sil</h3>
+            <p class="text-xs text-slate-500" x-text="studentToDelete ? studentToDelete.name + ' adlı öğrenciyi ve tüm kayıtlarını silmek istiyor musunuz?' : ''"></p>
+            <div class="flex gap-2 pt-1">
+                <button @click="openDeleteModal = false" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold text-sm active:scale-95 transition">İptal</button>
+                <button @click="confirmDeleteStudent" class="flex-1 py-3 rounded-xl bg-rose-600 text-white font-semibold text-sm active:scale-95 transition shadow-sm">Evet, Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT MİMARİSİ -->
+    <script>
+        function appData() {
+            return {
+                currentView: 'home', // 'home' | 'studentList' | 'studentDetail'
+                currentTime: '',
+                currentDate: '',
+                
+                classes: [],
+                students: [],
+                logs: [],
+
+                activeClassId: null,
+                activeStudentId: null,
+
+                searchQuery: '',
+                sortOrder: 'ALPHABETICAL',
+
+                // Modallar
+                openAddClassModal: false,
+                openAddStudentModal: false,
+                openQuickScoreModal: false,
+                openDeleteModal: false,
+
+                newClassName: '',
+                newStudentNumber: '',
+                newStudentName: '',
+                newStudentPhotoBase64: null,
+
+                selectedStudent: null,
+                studentToDelete: null,
+                longPressTimer: null,
+
+                positiveCriteria: ['Derse katılım', 'Extra puan', 'İyi davranış', 'Ödevini yapma'],
+                negativeCriteria: ['İzinsiz konuşma', 'Dersin düzenini bozma', 'Uygunsuz davranış', 'Ödev yapmama', 'Kitap yok', 'Defter yok'],
+
+                initApp() {
+                    // LocalStorage verilerini yükle
+                    this.classes = JSON.parse(localStorage.getItem('cb_classes') || '[]');
+                    this.students = JSON.parse(localStorage.getItem('cb_students') || '[]');
+                    this.logs = JSON.parse(localStorage.getItem('cb_logs') || '[]');
+                    this.sortOrder = localStorage.getItem('cb_sort') || 'ALPHABETICAL';
+
+                    // Canlı Saat ve Tarih Döngüsü
+                    this.updateDateTime();
+                    setInterval(() => this.updateDateTime(), 1000);
+                },
+
+                updateDateTime() {
+                    const now = new Date();
+                    this.currentTime = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    this.currentDate = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' }).format(now);
+                },
+
+                saveData() {
+                    localStorage.setItem('cb_classes', JSON.stringify(this.classes));
+                    localStorage.setItem('cb_students', JSON.stringify(this.students));
+                    localStorage.setItem('cb_logs', JSON.stringify(this.logs));
+                    localStorage.setItem('cb_sort', this.sortOrder);
+                },
+
+                addClass() {
+                    if (!this.newClassName.trim()) return;
+                    this.classes.push({ id: Date.now(), name: this.newClassName.trim() });
+                    this.newClassName = '';
+                    this.openAddClassModal = false;
+                    this.saveData();
+                },
+
+                selectClass(c) {
+                    this.activeClassId = c.id;
+                    this.searchQuery = '';
+                    this.currentView = 'studentList';
+                },
+
+                get activeClassName() {
+                    const c = this.classes.find(x => x.id === this.activeClassId);
+                    return c ? c.name : '';
+                },
+
+                getStudentCount(classId) {
+                    return this.students.filter(s => s.classId === classId).length;
+                },
+
+                addStudent() {
+                    if (!this.newStudentNumber.trim() || !this.newStudentName.trim()) return;
+                    this.students.push({
+                        id: Date.now(),
+                        classId: this.activeClassId,
+                        number: this.newStudentNumber.trim(),
+                        name: this.newStudentName.trim(),
+                        photo: this.newStudentPhotoBase64
+                    });
+                    this.newStudentNumber = '';
+                    this.newStudentName = '';
+                    this.newStudentPhotoBase64 = null;
+                    this.openAddStudentModal = false;
+                    this.saveData();
+                },
+
+                handleNewStudentPhoto(event) {
+                    const file = event.target.files[0];
+                    if (file) this.compressImage(file, (base64) => { this.newStudentPhotoBase64 = base64; });
+                },
+
+                compressImage(file, callback) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 300;
+                            const MAX_HEIGHT = 300;
+                            let width = img.width;
+                            let height = img.height;
+                            if (width > height) {
+                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                            } else {
+                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            callback(canvas.toDataURL('image/jpeg', 0.8));
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                importTxtFile(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const lines = e.target.result.split('\n');
+                        let count = 0;
+                        lines.forEach(line => {
+                            const parts = line.trim().split(/\s+/, 2);
+                            if (parts.length === 2) {
+                                const num = parts[0];
+                                const name = parts[1];
+                                // Geri kalan kelimeleri de isme dahil et
+                                const fullName = line.trim().substring(num.length).trim();
+                                if (num && fullName) {
+                                    this.students.push({
+                                        id: Date.now() + Math.random(),
+                                        classId: this.activeClassId,
+                                        number: num,
+                                        name: fullName,
+                                        photo: null
+                                    });
+                                    count++;
+                                }
+                            }
+                        });
+                        this.saveData();
+                        alert(count + ' öğrenci başarıyla içe aktarıldı.');
+                    };
+                    reader.readAsText(file);
+                    event.target.value = '';
+                },
+
+                setSort(order) {
+                    this.sortOrder = order;
+                    this.saveData();
+                },
+
+                get filteredStudents() {
+                    let list = this.students.filter(s => s.classId === this.activeClassId);
+                    
+                    // Puanları hesapla
+                    list = list.map(s => {
+                        const sLogs = this.logs.filter(l => l.studentId === s.id);
+                        const pos = sLogs.filter(l => l.points > 0).reduce((acc, l) => acc + l.points, 0);
+                        const neg = Math.abs(sLogs.filter(l => l.points < 0).reduce((acc, l) => acc + l.points, 0));
+                        return { ...s, pos, neg, net: pos - neg };
+                    });
+
+                    // Arama filtresi
+                    if (this.searchQuery.trim()) {
+                        const q = this.searchQuery.toLowerCase();
+                        list = list.filter(s => s.name.toLowerCase().includes(q) || s.number.includes(q));
+                    }
+
+                    // Sıralama
+                    return list.sort((a, b) => {
+                        if (this.sortOrder === 'NUMBER_ASC') {
+                            return (parseInt(a.number) || 0) - (parseInt(b.number) || 0);
+                        } else if (this.sortOrder === 'POINTS_HIGH_LOW') {
+                            return b.net - a.net;
+                        } else if (this.sortOrder === 'POINTS_LOW_HIGH') {
+                            return a.net - b.net;
+                        } else if (this.sortOrder === 'ALPHABETICAL') {
+                            return a.name.localeCompare(b.name, 'tr');
+                        } else if (this.sortOrder === 'RECENT_SCORED') {
+                            const lastA = Math.max(...this.logs.filter(l => l.studentId === a.id).map(l => l.timestamp), 0);
+                            const lastB = Math.max(...this.logs.filter(l => l.studentId === b.id).map(l => l.timestamp), 0);
+                            return lastB - lastA;
+                        }
+                        return 0;
+                    });
+                },
+
+                openQuickScore(s) {
+                    this.selectedStudent = s;
+                    this.openQuickScoreModal = true;
+                },
+
+                givePoint(desc, points, type) {
+                    if (!this.selectedStudent) return;
+                    this.logs.unshift({
+                        id: Date.now(),
+                        studentId: this.selectedStudent.id,
+                        type: type,
+                        desc: desc,
+                        points: points,
+                        timestamp: Date.now()
+                    });
+                    this.saveData();
+                    this.openQuickScoreModal = false;
+                },
+
+                startLongPress(s) {
+                    this.longPressTimer = setTimeout(() => {
+                        this.studentToDelete = s;
+                        this.openDeleteModal = true;
+                    }, 600);
+                },
+
+                cancelLongPress() {
+                    clearTimeout(this.longPressTimer);
+                },
+
+                confirmDeleteStudent() {
+                    if (!this.studentToDelete) return;
+                    this.students = this.students.filter(s => s.id !== this.studentToDelete.id);
+                    this.logs = this.logs.filter(l => l.studentId !== this.studentToDelete.id);
+                    this.saveData();
+                    this.openDeleteModal = false;
+                    this.studentToDelete = null;
+                },
+
+                goToDetailFromModal() {
+                    this.activeStudentId = this.selectedStudent.id;
+                    this.openQuickScoreModal = false;
+                    this.currentView = 'studentDetail';
+                },
+
+                get activeStudent() {
+                    return this.students.find(s => s.id === this.activeStudentId);
+                },
+
+                get activeStudentStats() {
+                    const sLogs = this.logs.filter(l => l.studentId === this.activeStudentId);
+                    const pos = sLogs.filter(l => l.points > 0).reduce((acc, l) => acc + l.points, 0);
+                    const neg = Math.abs(sLogs.filter(l => l.points < 0).reduce((acc, l) => acc + l.points, 0));
+                    return { pos, neg };
+                },
+
+                get activeStudentLogs() {
+                    return this.logs.filter(l => l.studentId === this.activeStudentId).sort((a, b) => b.timestamp - a.timestamp);
+                },
+
+                updateStudentPhoto(event) {
+                    const file = event.target.files[0];
+                    if (file && this.activeStudentId) {
+                        this.compressImage(file, (base64) => {
+                            const s = this.students.find(x => x.id === this.activeStudentId);
+                            if (s) {
+                                s.photo = base64;
+                                this.saveData();
+                            }
+                        });
+                    }
+                },
+
+                deleteLog(logId) {
+                    this.logs = this.logs.filter(l => l.id !== logId);
+                    this.saveData();
+                },
+
+                formatDate(ts) {
+                    const d = new Date(ts);
+                    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
