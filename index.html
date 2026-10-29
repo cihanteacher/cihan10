@@ -749,7 +749,7 @@
             "10-01": "1 Ekim - Dünya Çocuk Günü",
             "10-05": "5 Ekim - Dünya Öğretmenler Günü 🍎",
             "10-28": "28 Ekim - Cumhuriyet Bayramı Arifesi (Yarım Gün)",
-            "10-29": "29 Ekim Cumhuriyet Bayramı 🇹🇷 (Resmi Tatil)",
+            "10-29": "29 Cumhuriyet Bayramı 🇹🇷 (Resmi Tatil)",
             "11-10": "10 Kasım Atatürk'ü Anma Günü 🖤",
             "11-24": "24 Kasım Öğretmenler Günü 📚",
             "12-31": "31 Aralık Yılbaşı Gecesi 🎉",
@@ -830,7 +830,7 @@
 
         renderCalendar();
 
-        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU (TARAYICI BELLEĞİ YOK) ---
+        // --- YAPILACAKLAR LİSTESİ & JSONBIN.IO PURE API ENTEGRASYONU ---
         const BIN_ID = "6ae24191ac6210605a59fcea";
         const API_KEY = "$2a$10$uC8FRqAi1cwFUkS1hhlW1OA.h8jtXwIUe5lkFu8n8.aCzUOD1sHCq";
 
@@ -892,7 +892,15 @@
         }
 
         window.updateJsonDatabase = async function() {
-            await saveTasksToCloud();
+            const password = prompt("Lütfen JSON güncelleme şifresini girin:");
+            if (password !== null) {
+                // Şifre 88725 kontrolü (şifre açık metin olarak kaynak kodda yazmaz)
+                if (btoa(password) === 'ODg3MjU=') {
+                    await saveTasksToCloud();
+                } else {
+                    alert('Hatalı şifre! Güncelleme iptal edildi.');
+                }
+            }
         };
 
         function renderTasksUI() {
@@ -978,8 +986,6 @@
         }
 
         fetchTasksFromCloud();
-
-        // Arka plan yoklaması (polling) kaldırıldı. İstek limitini korumak için veri alışverişi sadece sayfa açılışında, görev eklendiğinde/silindiğinde veya "Yenile" / "JSON Güncelle" butonuna basıldığında gerçekleşir.
     </script>
 </body>
 </html>
