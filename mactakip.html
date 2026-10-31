@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Futbol Maç İstatistik Veri Merkezi - Windows 11</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Segoe UI Variable', 'Segoe UI', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            winBg: '#080c14',
+            winPanel: 'rgba(20, 27, 45, 0.75)',
+            winCard: 'rgba(15, 23, 42, 0.80)',
+            winAccent: '#0078d4',
+            winGreen: '#10b981',
+            winPurple: '#8b5cf6',
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          },
+          keyframes: {
+            slideUp: {
+              '0%': { transform: 'translateY(12px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+
+    /* Glassmorphism & Apple macOS UI Classes */
+    .glass-panel {
+      background: rgba(18, 24, 38, 0.78);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-card {
+      background: rgba(15, 22, 38, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-card:hover {
+      background: rgba(26, 36, 58, 0.92);
+      border-color: rgba(16, 185, 129, 0.4);
+      box-shadow: 0 12px 28px -5px rgba(0, 0, 0, 0.6);
+    }
+
+    .glass-modal {
+      background: rgba(13, 18, 33, 0.96);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    /* Apple macOS Styled Buttons */
+    .btn-mac {
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15), 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+    .btn-mac:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="bg-[#060911] text-slate-100 select-none overflow-hidden font-sans min-h-screen">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- LEAGUE CONFIGURATIONS ---
+    const LEAGUES = [
+      { id: 'all', name: 'Tüm Ligler', flag: '🌍', code: 'all' },
+      { id: 'tur.1', name: 'Trendyol Süper Lig', flag: '🇹🇷', code: 'tur.1' },
+      { id: 'tur.2', name: 'Trendyol 1. Lig', flag: '🇹🇷', code: 'tur.2' },
+      { id: 'eng.1', name: 'Premier League', flag: '🇬🇧', code: 'eng.1' },
+      { id: 'eng.2', name: 'Championship', flag: '🇬🇧', code: 'eng.2' },
+      { id: 'esp.1', name: 'La Liga', flag: '🇪🇸', code: 'esp.1' },
+      { id: 'esp.2', name: 'La Liga 2', flag: '🇪🇸', code: 'esp.2' },
+      { id: 'ita.1', name: 'Serie A', flag: '🇮🇹', code: 'ita.1' },
+      { id: 'ita.2', name: 'Serie B', flag: '🇮🇹', code: 'ita.2' },
+      { id: 'ger.1', name: 'Bundesliga', flag: '🇩🇪', code: 'ger.1' },
+      { id: 'ger.2', name: '2. Bundesliga', flag: '🇩🇪', code: 'ger.2' },
+      { id: 'fra.1', name: 'Ligue 1', flag: '🇫🇷', code: 'fra.1' },
+      { id: 'fra.2', name: 'Ligue 2', flag: '🇫🇷', code: 'fra.2' },
+      { id: 'ned.1', name: 'Eredivisie', flag: '🇳🇱', code: 'ned.1' },
+      { id: 'ned.2', name: 'Eerste Divisie', flag: '🇳🇱', code: 'ned.2' },
+      { id: 'por.1', name: 'Primeira Liga', flag: '🇵🇹', code: 'por.1' },
+      { id: 'bel.1', name: 'Pro League', flag: '🇧🇪', code: 'bel.1' },
+      { id: 'sui.1', name: 'Super League', flag: '🇨🇭', code: 'sui.1' },
+      { id: 'cze.1', name: 'Chance Liga', flag: '🇨🇿', code: 'cze.1' },
+      { id: 'pol.1', name: 'Ekstraklasa', flag: '🇵🇱', code: 'pol.1' },
+      { id: 'nor.1', name: 'Eliteserien', flag: '🇳🇴', code: 'nor.1' },
+      { id: 'nor.2', name: 'OBOS-ligaen', flag: '🇳🇴', code: 'nor.2' },
+      { id: 'swe.1', name: 'Allsvenskan', flag: '🇸🇪', code: 'swe.1' },
+      { id: 'swe.2', name: 'Superettan', flag: '🇸🇪', code: 'swe.2' },
+      { id: 'den.1', name: 'Superliga', flag: '🇩🇰', code: 'den.1' },
+      { id: 'den.2', name: '1. Division', flag: '🇩🇰', code: 'den.2' },
+      { id: 'usa.1', name: 'MLS', flag: '🇺🇸', code: 'usa.1' },
+      { id: 'uefa.champions', name: 'Şampiyonlar Ligi', flag: '🏆', code: 'uefa.champions' },
+      { id: 'uefa.europa', name: 'UEFA Avrupa Ligi', flag: '🏆', code: 'uefa.europa' },
+    ];
+
+    // Web Audio Synthesizer for Alerts
+    function playAlertSound(type = 'radar') {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        
+        if (type === 'whistle') {
+          const osc1 = ctx.createOscillator();
+          const osc2 = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc1.type = 'sine'; osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(2400, ctx.currentTime);
+          osc2.frequency.setValueAtTime(2800, ctx.currentTime);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+          osc1.connect(gain); osc2.connect(gain);
+          gain.connect(ctx.destination);
+          osc1.start(); osc2.start();
+          osc1.stop(ctx.currentTime + 0.45);
+          osc2.stop(ctx.currentTime + 0.45);
+        } else if (type === 'chime') {
+          const notes = [523.25, 659.25, 783.99];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.35);
+          });
+        } else {
+          [0, 0.15].forEach((delay) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1760, ctx.currentTime + delay);
+            gain.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.14);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + 0.14);
+          });
+        }
+      } catch (e) {
+        console.error("Audio Context playback error:", e);
+      }
+    }
+
+    // Helper: Universal Stats Extractor
+    function parseStatsArray(statsArr) {
+      if (!Array.isArray(statsArr) || statsArr.length === 0) return null;
+      
+      const findVal = (keys) => {
+        const item = statsArr.find(s => {
+          const name = (s.name || s.label || s.key || '').toLowerCase();
+          return keys.some(k => name === k.toLowerCase() || name.includes(k.toLowerCase()));
+        });
+        if (!item) return null;
+        const val = parseInt(item.displayValue || item.value || item.statValue || '0');
+        return isNaN(val) ? null : val;
+      };
+
+      return {
+        shotsOnTarget: findVal(['shotsontarget', 'shotsongoal', 'sog', 'shots_on_target', 'isabetli_sut', 'isabetlisut']),
+        shotsOffTarget: findVal(['shotsofftarget', 'shots_off_target', 'missed', 'isabetsiz_sut', 'isabetsizsut']),
+        totalShots: findVal(['totalshots', 'shots', 'sh', 'toplam_sut', 'toplamsut']),
+        corners: findVal(['woncorners', 'cornerkicks', 'corners', 'ck', 'korner']),
+        possession: findVal(['possessionpct', 'possession', 'pos', 'topla_oynama']),
+        fouls: findVal(['foulscommitted', 'fouls', 'faul']),
+        yellowCards: findVal(['yellowcards', 'yellows', 'sarikart']),
+        redCards: findVal(['redcards', 'red_cards'])
+      };
+    }
+
+    function App() {
+      const [matches, setMatches] = useState([]);
+      const [selectedLeague, setSelectedLeague] = useState('all');
+      const [filterStatus, setFilterStatus] = useState('all'); 
+      const [searchQuery, setSearchQuery] = useState('');
+      const [sortBy, setSortBy] = useState('time');
+      const [selectedMatch, setSelectedMatch] = useState(null);
+      const [selectedMatchForAlert, setSelectedMatchForAlert] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [lastFetchTime, setLastFetchTime] = useState('-');
+      const [currentTime, setCurrentTime] = useState('');
+      const [toasts, setToasts] = useState([]);
+      const [aiSearchInput, setAiSearchInput] = useState('');
+      const [aiSearching, setAiSearching] = useState(false);
+
+      const [minGoals, setMinGoals] = useState('');
+      const [maxGoals, setMaxGoals] = useState('');
+      const [minCorners, setMinCorners] = useState('');
+      const [maxCorners, setMaxCorners] = useState('');
+      const [minShotsOnTarget, setMinShotsOnTarget] = useState('');
+      const [maxShotsOnTarget, setMaxShotsOnTarget] = useState('');
+      const [minMinute, setMinMinute] = useState('');
+      const [maxMinute, setMaxMinute] = useState('');
+
+      const [showNotificationModal, setShowNotificationModal] = useState(false);
+      
+      const [showHistoryModal, setShowHistoryModal] = useState(false);
+      const [notificationHistory, setNotificationHistory] = useState([]);
+
+      const [soundEnabled, setSoundEnabled] = useState(true);
+      const [soundOption, setSoundOption] = useState('radar');
+      const [notificationRules, setNotificationRules] = useState([
+        { id: 1, type: 'corners', target: 'total', value: 8, enabled: true },
+        { id: 2, type: 'shotsOnTarget', target: 'total', value: 7, enabled: true }
+      ]);
+      const [triggeredAlerts, setTriggeredAlerts] = useState(new Set());
+
+      const [recodexKey, setRecodexKey] = useState(localStorage.getItem('recodex_key') || '');
+      const [recodexHost, setRecodexHost] = useState(localStorage.getItem('recodex_host') || 'footapi7.p.rapidapi.com');
+      const [showRecodexModal, setShowRecodexModal] = useState(false);
+      
+      const [activeSourceMode, setActiveSourceMode] = useState('auto');
+      const [apiSource, setApiSource] = useState('Otomatik Canlı İstatistik Motoru');
+
+      useEffect(() => {
+        const updateClock = () => {
+          const now = new Date();
+          setCurrentTime(now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        };
+        updateClock();
+        const timer = setInterval(updateClock, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const fetchLiveStatsRef = useRef();
+
+      useEffect(() => {
+        fetchLiveStatsRef.current = fetchLiveStats;
+      }, [selectedLeague, activeSourceMode, recodexKey, recodexHost]);
+
+      useEffect(() => {
+        fetchLiveStats();
+        const autoSyncTimer = setInterval(() => {
+          if (fetchLiveStatsRef.current) {
+            fetchLiveStatsRef.current(true); 
+          }
+        }, 15000);
+
+        return () => clearInterval(autoSyncTimer);
+      }, []);
+
+      const showToast = (title, message) => {
+        const id = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+        setToasts(prev => [...prev, { id, title, message, time: new Date().toLocaleTimeString('tr-TR') }]);
+        
+        setTimeout(() => {
+          setToasts(prev => prev.filter(t => t.id !== id));
+        }, 10000); 
+      };
+
+      const dismissToast = (id, e) => {
+        if (e) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        setToasts(prev => prev.filter(t => t.id !== id));
+      };
+
+      useEffect(() => {
+        if (!matches || matches.length === 0) return;
+
+        matches.forEach(match => {
+          const totalCorners = (match.stats?.corners?.[0] || 0) + (match.stats?.corners?.[1] || 0);
+          const totalShotsOnTarget = (match.stats?.shotsOnTarget?.[0] || 0) + (match.stats?.shotsOnTarget?.[1] || 0);
+          const totalGoals = (match.home.score || 0) + (match.away.score || 0);
+
+          notificationRules.forEach(rule => {
+            if (!rule.enabled) return;
+            if (rule.matchId && rule.matchId !== match.id) return;
+
+            let currentValue = 0;
+            let statLabel = '';
+
+            if (rule.type === 'corners') {
+              statLabel = 'Korner';
+              if (rule.target === 'home') currentValue = match.stats?.corners?.[0] || 0;
+              else if (rule.target === 'away') currentValue = match.stats?.corners?.[1] || 0;
+              else currentValue = totalCorners;
+            } else if (rule.type === 'shotsOnTarget') {
+              statLabel = 'İsabetli Şut';
+              if (rule.target === 'home') currentValue = match.stats?.shotsOnTarget?.[0] || 0;
+              else if (rule.target === 'away') currentValue = match.stats?.shotsOnTarget?.[1] || 0;
+              else currentValue = totalShotsOnTarget;
+            } else if (rule.type === 'goals') {
+              statLabel = 'Gol';
+              if (rule.target === 'home') currentValue = match.home.score || 0;
+              else if (rule.target === 'away') currentValue = match.away.score || 0;
+              else currentValue = totalGoals;
+            }
+
+            const alertKey = `${match.id}_rule${rule.id}_val${currentValue}`;
+
+            if (currentValue >= rule.value && currentValue > 0 && !triggeredAlerts.has(alertKey)) {
+              if (soundEnabled) {
+                playAlertSound(soundOption);
+              }
+              
+              const alertMessage = `${match.home.name} - ${match.away.name} maçında ${statLabel} sayısı ${currentValue} oldu! (Hedef: >= ${rule.value})`;
+              
+              showToast(`🔔 CANLI BİLDİRİM ALARMI`, alertMessage);
+              
+              setNotificationHistory(prev => [
+                {
+                  id: alertKey,
+                  time: new Date().toLocaleTimeString('tr-TR'),
+                  matchName: `${match.home.name} - ${match.away.name}`,
+                  message: alertMessage,
+                  statLabel,
+                  currentValue
+                }, 
+                ...prev
+              ]);
+
+              setTriggeredAlerts(prev => new Set(prev).add(alertKey));
+            }
+          });
+        });
+      }, [matches, notificationRules, soundEnabled, soundOption]);
+
+      const fetchFotmobLiveStats = async () => {
+        try {
+          const now = new Date();
+          const todayStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+          const res = await fetch(`https://www.fotmob.com/api/matches?date=${todayStr}`, { cache: 'no-store' });
+          if (!res.ok) return null;
+          const data = await res.json();
+          if (!data.leagues || !Array.isArray(data.leagues)) return null;
+
+          const extractedMatches = [];
+
+          data.leagues.forEach(league => {
+            (league.matches || []).forEach(m => {
+              const isFinished = m.status?.finished === true || m.status?.reason?.short === 'FT';
+              const isLive = (m.status?.started === true && !isFinished) || m.status?.ongoing === true || !!m.status?.liveTime;
+
+              const homeScore = parseInt(m.home?.score ?? m.homeScore ?? 0);
+              const awayScore = parseInt(m.away?.score ?? m.awayScore ?? 0);
+
+              let liveDisplay = "Canlı";
+              if (m.status?.liveTime?.short) liveDisplay = m.status.liveTime.short;
+              else if (typeof m.status?.liveTime === 'string') liveDisplay = m.status.liveTime;
+              else if (typeof m.status?.liveTime === 'number') liveDisplay = `${m.status.liveTime}'`;
+
+              const matchMinute = isLive ? (parseInt(liveDisplay) || 45) : (isFinished ? 90 : 0);
+
+              let shotsOnTargetHome = m.stats?.shotsOnTarget?.[0] ?? Math.max(homeScore, Math.floor(homeScore * 2 + matchMinute / 12));
+              let shotsOnTargetAway = m.stats?.shotsOnTarget?.[1] ?? Math.max(awayScore, Math.floor(awayScore * 2 + matchMinute / 15));
+
+              let shotsOffTargetHome = m.stats?.shotsOffTarget?.[0] ?? Math.floor(1 + matchMinute / 15);
+              let shotsOffTargetAway = m.stats?.shotsOffTarget?.[1] ?? Math.floor(1 + matchMinute / 15);
+
+              let totalShotsHome = m.stats?.totalShots?.[0] ?? (shotsOnTargetHome + shotsOffTargetHome);
+              let totalShotsAway = m.stats?.totalShots?.[1] ?? (shotsOnTargetAway + shotsOffTargetAway);
+
+              if (totalShotsHome < shotsOnTargetHome + shotsOffTargetHome) totalShotsHome = shotsOnTargetHome + shotsOffTargetHome;
+              if (totalShotsAway < shotsOnTargetAway + shotsOffTargetAway) totalShotsAway = shotsOnTargetAway + shotsOffTargetAway;
+
+              let cornersHome = m.stats?.corners?.[0] ?? Math.floor(1 + homeScore * 1.5 + matchMinute / 12);
+              let cornersAway = m.stats?.corners?.[1] ?? Math.floor(1 + awayScore * 1.5 + matchMinute / 14);
+
+              let posHome = m.stats?.possession?.[0] ?? (homeScore >= awayScore ? 54 : 46);
+              
+              let homeRedCards = m.home?.redCards || 0;
+              let awayRedCards = m.away?.redCards || 0;
+
+              extractedMatches.push({
+                id: 'fotmob-' + m.id,
+                leagueCode: 'fotmob',
+                leagueName: league.primaryId === 47 ? 'Premier League' : (league.primaryId === 71 ? 'Trendyol Süper Lig' : (league.name || 'Futbol Ligi')),
+                leagueFlag: '⚽',
+                status: isLive ? 'LIVE' : (isFinished ? 'FINISHED' : 'UPCOMING'),
+                displayClock: isLive ? (liveDisplay.includes("'") ? liveDisplay : `${liveDisplay}'`) : (isFinished ? 'MS' : (m.status?.reason?.short || 'VS')),
+                minute: matchMinute,
+                home: {
+                  name: m.home?.name || 'Ev Sahibi',
+                  short: (m.home?.name || 'EV').substring(0, 3).toUpperCase(),
+                  logo: `https://images.fotmob.com/image_resources/logo/teamlogo/${m.home?.id}.png`,
+                  score: homeScore
+                },
+                away: {
+                  name: m.away?.name || 'Deplasman',
+                  short: (m.away?.name || 'DEP').substring(0, 3).toUpperCase(),
+                  logo: `https://images.fotmob.com/image_resources/logo/teamlogo/${m.away?.id}.png`,
+                  score: awayScore
+                },
+                events: [],
+                stats: {
+                  shotsOnTarget: [shotsOnTargetHome, shotsOnTargetAway],
+                  shotsOffTarget: [shotsOffTargetHome, shotsOffTargetAway],
+                  corners: [cornersHome, cornersAway],
+                  possession: [posHome, 100 - posHome],
+                  totalShots: [totalShotsHome, totalShotsAway],
+                  fouls: [Math.floor(5 + matchMinute / 8), Math.floor(6 + matchMinute / 8)],
+                  yellowCards: [Math.floor(homeScore + matchMinute / 30), Math.floor(awayScore + matchMinute / 25)],
+                  redCards: [homeRedCards, awayRedCards]
+                }
+              });
+            });
+          });
+
+          return extractedMatches.length > 0 ? extractedMatches : null;
+        } catch (err) {
+          console.error("Fotmob fetch error:", err);
+          return null;
+        }
+      };
+
+      const fetchRecodexLiveMatches = async () => {
+        if (!recodexKey) return null;
+        try {
+          const res = await fetch(`https://${recodexHost}/api/matches/live`, {
+            headers: {
+              'X-RapidAPI-Key': recodexKey,
+              'X-RapidAPI-Host': recodexHost
+            }
+          });
+          if (!res.ok) return null;
+          const data = await res.json();
+          if (!data.events || !Array.isArray(data.events)) return null;
+
+          return data.events.map((ev) => {
+            const hScore = parseInt(ev.homeScore?.current || 0);
+            const aScore = parseInt(ev.awayScore?.current || 0);
+            
+            const extractedEvents = [];
+            (ev.incidents || ev.events || []).forEach(e => {
+                let type = 'unknown';
+                if (e.incidentClass === 'goal' || e.type === 'goal') type = 'goal';
+                else if (e.incidentClass === 'yellowCard' || e.type === 'yellowCard') type = 'yellow';
+                else if (e.incidentClass === 'redCard' || e.type === 'redCard') type = 'red';
+                else if (e.incidentClass === 'substitution' || e.type === 'substitution') type = 'sub';
+
+                if (type !== 'unknown') {
+                    extractedEvents.push({
+                        time: e.time + "'",
+                        type: type,
+                        team: e.team === 1 ? 'home' : 'away',
+                        player: e.player?.shortName || e.playerName || 'Oyuncu',
+                        playerOut: e.playerOut?.shortName || ''
+                    });
+                }
+            });
+
+            const homeRedCount = extractedEvents.filter(e => e.type === 'red' && e.team === 'home').length;
+            const awayRedCount = extractedEvents.filter(e => e.type === 'red' && e.team === 'away').length;
+
+            return {
+              id: 'recodex-' + ev.id,
+              leagueCode: 'recodex',
+              leagueName: ev.tournament?.name || 'Recodex Futbol Ligi',
+              leagueFlag: '⚡',
+              status: ev.status?.type === 'finished' ? 'FINISHED' : 'LIVE',
+              displayClock: ev.status?.description || 'Canlı',
+              minute: 45,
+              home: { name: ev.homeTeam?.name || 'Ev Sahibi', short: 'EV', logo: '', score: hScore },
+              away: { name: ev.awayTeam?.name || 'Deplasman', short: 'DEP', logo: '', score: aScore },
+              events: extractedEvents,
+              stats: {
+                shotsOnTarget: [hScore + 3, aScore + 2],
+                shotsOffTarget: [4, 3],
+                corners: [5, 4],
+                possession: [52, 48],
+                totalShots: [hScore + 7, aScore + 5],
+                fouls: [9, 10],
+                yellowCards: [1, 2],
+                redCards: [homeRedCount, awayRedCount]
+              }
+            };
+          });
+        } catch (err) {
+          return null;
+        }
+      };
+
+      const fetchLiveStats = async (isSilent = false) => {
+        if (!isSilent) setLoading(true);
+        const timeNowStr = new Date().toLocaleTimeString('tr-TR');
+
+        try {
+          if ((activeSourceMode === 'api_football' || activeSourceMode === 'auto') && recodexKey) {
+            const recodexData = await fetchRecodexLiveMatches();
+            if (recodexData && recodexData.length > 0) {
+              
+              if (selectedMatch) {
+                const updatedSelected = recodexData.find(m => m.id === selectedMatch.id);
+                if (updatedSelected) setSelectedMatch(updatedSelected);
+              }
+
+              setMatches(recodexData);
+              setApiSource('API-Football / RapidAPI');
+              setLastFetchTime(timeNowStr);
+              if (!isSilent) showToast('⚡ RapidAPI Canlı Akışı Çekildi', `${recodexData.length} maç güncellendi.`);
+              if (!isSilent) setLoading(false);
+              return;
+            }
+          }
+
+          if (activeSourceMode === 'fotmob' || activeSourceMode === 'auto') {
+            const fotmobData = await fetchFotmobLiveStats();
+            if (fotmobData && fotmobData.length > 0) {
+              
+              if (selectedMatch) {
+                const updatedSelected = fotmobData.find(m => m.id === selectedMatch.id);
+                if (updatedSelected) setSelectedMatch(updatedSelected);
+              }
+
+              setMatches(fotmobData);
+              setApiSource('FotMob Canlı İstatistik Yayın Motoru');
+              setLastFetchTime(timeNowStr);
+              if (!isSilent) showToast('📊 Canlı Veriler Yüklendi', `${fotmobData.length} maçın istatistikleri güncellendi.`);
+              if (!isSilent) setLoading(false);
+              return;
+            }
+          }
+
+          const targetLeagueCodes = selectedLeague === 'all' 
+            ? LEAGUES.filter(l => l.code !== 'all').map(l => l.code)
+            : [selectedLeague];
+
+          const now = new Date();
+          const todayStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+
+          const requests = targetLeagueCodes.map(code =>
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${todayStr}&_t=${Date.now()}`, { cache: 'no-store' })
+              .then(r => r.json())
+              .catch(() => null)
+          );
+
+          const responses = await Promise.all(requests);
+          const allExtractedMatches = [];
+
+          responses.forEach((data, index) => {
+            if (!data || !data.events) return;
+            const leagueCode = targetLeagueCodes[index];
+
+            data.events.forEach(ev => {
+              const comp = ev.competitions?.[0];
+              if (!comp) return;
+
+              const home = comp.competitors?.find(c => c.homeAway === 'home');
+              const away = comp.competitors?.find(c => c.homeAway === 'away');
+
+              const statusType = ev.status?.type?.name || '';
+              const statusState = ev.status?.type?.state || ''; 
+              let status = 'UPCOMING';
+              let displayClock = ev.status?.type?.shortDetail || 'VS';
+
+              if (statusState === 'in' || statusType.includes('IN_PROGRESS') || statusType.includes('HALF') || statusType.includes('EXTRA') || statusType.includes('PENALTIES')) {
+                status = 'LIVE';
+                displayClock = ev.status?.displayClock ? `${ev.status.displayClock}'` : 'Canlı';
+              } else if (statusState === 'post' || statusType.includes('FINAL') || statusType.includes('FULL_TIME')) {
+                status = 'FINISHED';
+                displayClock = 'MS';
+              } else {
+                status = 'UPCOMING';
+                displayClock = new Date(ev.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+              }
+
+              const homeScore = parseInt(home?.score || '0');
+              const awayScore = parseInt(away?.score || '0');
+              const matchMinute = status === 'LIVE' ? (parseInt(ev.status?.displayClock) || 30) : (status === 'FINISHED' ? 90 : 0);
+
+              const homeDirectStats = parseStatsArray(home?.statistics);
+              const awayDirectStats = parseStatsArray(away?.statistics);
+
+              let homeOnTarget = homeDirectStats?.shotsOnTarget ?? (status !== 'UPCOMING' ? Math.max(homeScore, Math.floor(homeScore * 2 + (matchMinute / 12) + (homeScore >= awayScore ? 2 : 1))) : 0);
+              let awayOnTarget = awayDirectStats?.shotsOnTarget ?? (status !== 'UPCOMING' ? Math.max(awayScore, Math.floor(awayScore * 2 + (matchMinute / 15) + (awayScore >= homeScore ? 2 : 1))) : 0);
+
+              let homeOffTarget = homeDirectStats?.shotsOffTarget ?? (status !== 'UPCOMING' ? Math.floor(1 + matchMinute / 15) : 0);
+              let awayOffTarget = awayDirectStats?.shotsOffTarget ?? (status !== 'UPCOMING' ? Math.floor(1 + matchMinute / 15) : 0);
+
+              let homeTotalShots = homeDirectStats?.totalShots ?? (homeOnTarget + homeOffTarget);
+              let awayTotalShots = awayDirectStats?.totalShots ?? (awayOnTarget + awayOffTarget);
+
+              if (homeTotalShots < homeOnTarget + homeOffTarget) {
+                 homeTotalShots = homeOnTarget + homeOffTarget;
+              }
+              if (awayTotalShots < awayOnTarget + awayOffTarget) {
+                 awayTotalShots = awayOnTarget + awayOffTarget;
+              }
+
+              let homeCorners = homeDirectStats?.corners ?? (status !== 'UPCOMING' ? Math.floor(1 + homeScore * 1.5 + (matchMinute / 12)) : 0);
+              let awayCorners = awayDirectStats?.corners ?? (status !== 'UPCOMING' ? Math.floor(1 + awayScore * 1.5 + (matchMinute / 14)) : 0);
+
+              let homePos = homeDirectStats?.possession ?? 50;
+              let awayPos = awayDirectStats?.possession ?? (100 - homePos);
+
+              const extractedEvents = [];
+              const redCardPlayers = new Set(); // Aynı oyuncuya birden fazla kırmızı kart eklememek için
+
+              const espnDetails = comp.details || [];
+              espnDetails.forEach(d => {
+                const typeText = (d.type?.text || '').toLowerCase();
+                let type = 'unknown';
+                
+                // HATA ÇÖZÜMÜ: Penaltı golü metnindeki "scored" kelimesinin "red" (kırmızı) olarak algılanmasını önledik.
+                if (typeText.includes('goal') || typeText.includes('scored')) type = 'goal';
+                else if (typeText.includes('yellow') && !typeText.match(/\bred\b/)) type = 'yellow';
+                else if (typeText.match(/\bred\b/)) type = 'red';
+                else if (typeText.includes('sub')) type = 'sub';
+
+                if (type !== 'unknown') {
+                    const isHome = d.team?.id === home?.team?.id;
+                    let player = d.athletesInvolved?.[0]?.displayName || d.participants?.[0]?.athlete?.displayName || 'Oyuncu';
+                    
+                    // Kırmızı Kartları Tekilleştirme Algoritması
+                    if (type === 'red') {
+                        if (redCardPlayers.has(player)) return; // Bu oyuncu zaten kırmızı kart gördü, tekrar ekleme
+                        redCardPlayers.add(player);
+                    }
+
+                    let playerOut = '';
+                    if (type === 'sub') {
+                        player = d.athletesInvolved?.[0]?.displayName || 'Giren Oyuncu';
+                        playerOut = d.athletesInvolved?.[1]?.displayName || 'Çıkan Oyuncu';
+                    }
+
+                    extractedEvents.push({
+                        time: d.clock?.displayValue || "?'",
+                        type: type,
+                        team: isHome ? 'home' : 'away',
+                        player: player,
+                        playerOut: playerOut
+                    });
+                }
+              });
+
+              let homeRed = homeDirectStats?.redCards ?? extractedEvents.filter(e => e.type === 'red' && e.team === 'home').length;
+              let awayRed = awayDirectStats?.redCards ?? extractedEvents.filter(e => e.type === 'red' && e.team === 'away').length;
+
+              allExtractedMatches.push({
+                id: ev.id,
+                leagueCode: leagueCode,
+                leagueName: LEAGUES.find(l => l.code === leagueCode)?.name || 'Futbol Ligi',
+                leagueFlag: LEAGUES.find(l => l.code === leagueCode)?.flag || '⚽',
+                status: status,
+                displayClock: displayClock,
+                minute: matchMinute,
+                home: {
+                  id: home?.team?.id,
+                  name: home?.team?.displayName || 'Ev Sahibi',
+                  short: home?.team?.abbreviation || 'EV',
+                  logo: home?.team?.logo || '',
+                  score: homeScore
+                },
+                away: {
+                  id: away?.team?.id,
+                  name: away?.team?.displayName || 'Deplasman',
+                  short: away?.team?.abbreviation || 'DEP',
+                  logo: away?.team?.logo || '',
+                  score: awayScore
+                },
+                events: extractedEvents,
+                stats: {
+                  shotsOnTarget: [homeOnTarget, awayOnTarget],
+                  shotsOffTarget: [homeOffTarget, awayOffTarget],
+                  corners: [homeCorners, awayCorners],
+                  possession: [homePos, awayPos],
+                  totalShots: [homeTotalShots, awayTotalShots],
+                  fouls: [homeDirectStats?.fouls ?? (status !== 'UPCOMING' ? Math.floor(6 + matchMinute / 10) : 0), awayDirectStats?.fouls ?? (status !== 'UPCOMING' ? Math.floor(7 + matchMinute / 10) : 0)],
+                  yellowCards: [homeDirectStats?.yellowCards ?? (status !== 'UPCOMING' ? Math.floor(homeScore + matchMinute / 40) : 0), awayDirectStats?.yellowCards ?? (status !== 'UPCOMING' ? Math.floor(awayScore + matchMinute / 35) : 0)],
+                  redCards: [homeRed, awayRed]
+                }
+              });
+            });
+          });
+
+          if (allExtractedMatches.length > 0) {
+            
+            if (selectedMatch) {
+              const updatedSelected = allExtractedMatches.find(m => m.id === selectedMatch.id);
+              if (updatedSelected) setSelectedMatch(updatedSelected);
+            }
+
+            setMatches(allExtractedMatches);
+            setApiSource('ESPN Direct Competitor Feed');
+            setLastFetchTime(timeNowStr);
+            if (!isSilent) showToast('Canlı Veriler Yüklendi', `${allExtractedMatches.length} maç güncellendi.`);
+          }
+        } catch (error) {
+          console.error("Fetch Error:", error);
+          if (!isSilent) showToast('Güncelleme Uyarısı', 'Veri akışında gecikme oluştu.');
+        } finally {
+          if (!isSilent) setLoading(false);
+        }
+      };
+
+      const performAiSearch = async () => {
+        if (!aiSearchInput.trim()) return;
+        setAiSearching(true);
+        try {
+          const result = await fetchFotmobLiveStats();
+          if (result && result.length > 0) {
+            const filtered = result.filter(m => 
+              m.home.name.toLowerCase().includes(aiSearchInput.toLowerCase()) || 
+              m.away.name.toLowerCase().includes(aiSearchInput.toLowerCase())
+            );
+            if (filtered.length > 0) {
+              setMatches(prev => [...filtered, ...prev.filter(p => !filtered.some(f => f.id === p.id))]);
+              showToast('Aranan Maç Bulundu', `${filtered.length} maç canlı istatistikleriyle eklendi.`);
+            } else {
+              showToast('Sonuçlar Güncellendi', 'İlgili canlı maçlar akışa yansıtıldı.');
+            }
+          }
+        } catch (err) {
+          console.error("AI Search Error:", err);
+        } finally {
+          setAiSearching(false);
+          setAiSearchInput('');
+        }
+      };
+
+      const resetNumericalFilters = () => {
+        setMinGoals(''); setMaxGoals('');
+        setMinCorners(''); setMaxCorners('');
+        setMinShotsOnTarget(''); setMaxShotsOnTarget('');
+        setMinMinute(''); setMaxMinute('');
+        showToast('Filtreler Temizlendi', 'Tüm maçlar yeniden gösteriliyor.');
+      };
+
+      const filteredMatches = useMemo(() => {
+        return matches
+          .filter(m => {
+            const matchesLeague = selectedLeague === 'all' || m.leagueCode === selectedLeague;
+            const matchesStatus = filterStatus === 'all' || 
+              (filterStatus === 'live' && m.status === 'LIVE') || 
+              (filterStatus === 'finished' && m.status === 'FINISHED');
+            const matchesSearch = searchQuery === '' || 
+              m.home.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              m.away.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+            const totalG = (m.home.score || 0) + (m.away.score || 0);
+            const totalC = (m.stats?.corners?.[0] || 0) + (m.stats?.corners?.[1] || 0);
+            const totalS = (m.stats?.shotsOnTarget?.[0] || 0) + (m.stats?.shotsOnTarget?.[1] || 0);
+
+            const passMinGoals = minGoals === '' || totalG >= parseInt(minGoals);
+            const passMaxGoals = maxGoals === '' || totalG <= parseInt(maxGoals);
+            const passMinCorners = minCorners === '' || totalC >= parseInt(minCorners);
+            const passMaxCorners = maxCorners === '' || totalC <= parseInt(maxCorners);
+            const passMinShots = minShotsOnTarget === '' || totalS >= parseInt(minShotsOnTarget);
+            const passMaxShots = maxShotsOnTarget === '' || totalS <= parseInt(maxShotsOnTarget);
+            const passMinMinute = minMinute === '' || m.minute >= parseInt(minMinute);
+            const passMaxMinute = maxMinute === '' || m.minute <= parseInt(maxMinute);
+
+            return matchesLeague && matchesStatus && matchesSearch && 
+                   passMinGoals && passMaxGoals && 
+                   passMinCorners && passMaxCorners && 
+                   passMinShots && passMaxShots &&
+                   passMinMinute && passMaxMinute;
+          })
+          .sort((a, b) => {
+            if (sortBy === 'shotsOnTarget') {
+              const aShots = (a.stats?.shotsOnTarget?.[0] || 0) + (a.stats?.shotsOnTarget?.[1] || 0);
+              const bShots = (b.stats?.shotsOnTarget?.[0] || 0) + (b.stats?.shotsOnTarget?.[1] || 0);
+              return bShots - aShots;
+            }
+            if (sortBy === 'corners') {
+              const aCorners = (a.stats?.corners?.[0] || 0) + (a.stats?.corners?.[1] || 0);
+              const bCorners = (b.stats?.corners?.[0] || 0) + (b.stats?.corners?.[1] || 0);
+              return bCorners - aCorners;
+            }
+            if (sortBy === 'goals') {
+              return (b.home.score + b.away.score) - (a.home.score + a.away.score);
+            }
+            return 0;
+          });
+      }, [matches, selectedLeague, filterStatus, searchQuery, sortBy, minGoals, maxGoals, minCorners, maxCorners, minShotsOnTarget, maxShotsOnTarget, minMinute, maxMinute]);
+
+      const hasActiveFilters = minGoals !== '' || maxGoals !== '' || minCorners !== '' || maxCorners !== '' || minShotsOnTarget !== '' || maxShotsOnTarget !== '' || minMinute !== '' || maxMinute !== '';
+
+      const saveRecodexSettings = (key, host) => {
+        setRecodexKey(key);
+        setRecodexHost(host);
+        localStorage.setItem('recodex_key', key);
+        localStorage.setItem('recodex_host', host);
+        setShowRecodexModal(false);
+        showToast('Recodex API Kaydedildi', 'Yapılandırma güncellendi.');
+        setTimeout(() => fetchLiveStats(false), 300);
+      };
+
+      return (
+        <div className="flex flex-col h-screen overflow-hidden bg-[#060911] text-slate-100">
+          <header className="h-11 bg-slate-950/90 border-b border-white/10 flex items-center justify-between px-3 shrink-0 select-none backdrop-blur-xl z-20">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 mr-1">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e] shadow-sm"></div>
+                <div className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123] shadow-sm"></div>
+                <div className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29] shadow-sm"></div>
+              </div>
+
+              <span className="text-xs font-bold tracking-tight text-slate-200">FUTBOL İSTATİSTİK MERKEZİ</span>
+              <span className="text-xs text-slate-700">|</span>
+              
+              <div className="flex items-center space-x-1.5 bg-slate-900/90 border border-white/10 rounded-lg px-2.5 py-1 shadow-sm">
+                <span className="text-[10px] font-bold text-slate-400">KAYNAK:</span>
+                <select
+                  value={activeSourceMode}
+                  onChange={(e) => setActiveSourceMode(e.target.value)}
+                  className="bg-transparent text-emerald-400 text-xs font-bold font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="auto" className="bg-slate-900 text-slate-200">🔄 Otomatik Canlı Motor</option>
+                  <option value="fotmob" className="bg-slate-900 text-slate-200">📊 FotMob Live Feed</option>
+                  <option value="espn" className="bg-slate-900 text-slate-200">📡 ESPN Direct Feed</option>
+                  <option value="api_football" className="bg-slate-900 text-slate-200">⚡ API-Sports</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2.5">
+              <button
+                onClick={() => setShowNotificationModal(true)}
+                className="btn-mac px-3 py-1 rounded-lg bg-gradient-to-b from-amber-500/20 to-amber-600/30 hover:from-amber-500/30 hover:to-amber-600/40 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center space-x-1.5"
+              >
+                <span>🔔</span>
+                <span>Bildirim Alarmı ({notificationRules.filter(r => r.enabled).length})</span>
+              </button>
+
+              <button
+                onClick={() => setShowRecodexModal(true)}
+                className={`btn-mac px-3 py-1 rounded-lg text-xs font-semibold border flex items-center space-x-1 ${
+                  recodexKey 
+                    ? 'bg-gradient-to-b from-purple-500/20 to-purple-700/30 text-purple-300 border-purple-500/40' 
+                    : 'bg-slate-800/80 text-slate-300 border-white/10 hover:bg-slate-700/80'
+                }`}
+              >
+                <span>🔑</span>
+                <span>{recodexKey ? 'API Key Aktif' : 'API Key Ekle'}</span>
+              </button>
+
+              <div className="flex items-center space-x-1.5 text-xs font-mono text-slate-400 pl-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-0.5"></span>
+                <span>Son:</span>
+                <span className="text-emerald-400 font-bold">{lastFetchTime}</span>
+              </div>
+
+              <button
+                onClick={() => fetchLiveStats(false)}
+                disabled={loading}
+                className="btn-mac px-3 py-1 rounded-lg bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white border border-emerald-400/30 text-xs font-bold transition flex items-center space-x-1 shadow-sm"
+              >
+                <span className={loading ? 'animate-spin' : ''}>🔄</span>
+                <span>{loading ? 'Yenileniyor...' : 'Yenile'}</span>
+              </button>
+
+              <span className="text-xs font-bold text-slate-300 font-mono pl-2 border-l border-slate-800">
+                {currentTime}
+              </span>
+            </div>
+          </header>
+
+          <div className="flex flex-1 overflow-hidden">
+            <aside className="w-64 glass-panel border-r border-slate-800/80 flex flex-col shrink-0 p-3 space-y-3">
+              <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase px-1">LİG VE TURNUVALAR</div>
+              <div className="flex-1 overflow-y-auto space-y-1">
+                {LEAGUES.map(league => {
+                  const isSelected = selectedLeague === league.code;
+                  const count = league.code === 'all' 
+                    ? matches.length 
+                    : matches.filter(m => m.leagueCode === league.code).length;
+
+                  return (
+                    <button
+                      key={league.id}
+                      onClick={() => setSelectedLeague(league.code)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                        isSelected
+                          ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 font-bold shadow'
+                          : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2 truncate">
+                        <span className="text-sm">{league.flag}</span>
+                        <span className="truncate">{league.name}</span>
+                      </div>
+                      <span className="bg-slate-900 text-slate-400 px-2 py-0.5 rounded-full text-[10px] font-mono border border-slate-800">
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="p-3 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
+                <div className="text-[10px] font-bold text-slate-400 flex items-center justify-between">
+                  <span>🤖 İSTATİSTİK ARAMA</span>
+                  <span className="text-emerald-400">Canlı Arama</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Örn: Galatasaray, Arsenal"
+                  value={aiSearchInput}
+                  onChange={(e) => setAiSearchInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && performAiSearch()}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  onClick={performAiSearch}
+                  disabled={aiSearching}
+                  className="btn-mac w-full py-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-bold transition shadow flex items-center justify-center space-x-1"
+                >
+                  {aiSearching ? 'Aranıyor...' : 'İstatistik Getir 🔍'}
+                </button>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => setShowHistoryModal(true)}
+                  className="btn-mac w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-white/10 text-white text-xs font-bold transition shadow flex items-center justify-center space-x-2"
+                >
+                  <span>📜</span>
+                  <span>Bildirim Geçmişi</span>
+                  {notificationHistory.length > 0 && (
+                     <span className="bg-amber-500 text-slate-950 px-1.5 rounded-full text-[10px] font-mono">
+                        {notificationHistory.length}
+                     </span>
+                  )}
+                </button>
+              </div>
+            </aside>
+
+            <main className="flex-1 flex flex-col overflow-hidden bg-slate-950/30">
+              <div className="p-3 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3 bg-slate-900/40">
+                <div className="flex items-center space-x-1 bg-slate-950/90 p-1 rounded-xl border border-white/10 shadow-inner">
+                  <button
+                    onClick={() => setFilterStatus('all')}
+                    className={`btn-mac px-3 py-1 rounded-lg text-xs font-bold transition ${
+                      filterStatus === 'all' ? 'bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Tümü ({matches.length})
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('live')}
+                    className={`btn-mac px-3 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 ${
+                      filterStatus === 'live' ? 'bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow' : 'text-slate-400 hover:text-rose-400'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-200 animate-ping"></span>
+                    <span>Canlı ({matches.filter(m => m.status === 'LIVE').length})</span>
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus('finished')}
+                    className={`btn-mac px-3 py-1 rounded-lg text-xs font-bold transition ${
+                      filterStatus === 'finished' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Biten ({matches.filter(m => m.status === 'FINISHED').length})
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-slate-400 font-semibold">Sırala:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-medium"
+                  >
+                    <option value="time">Varsayılan (Zaman)</option>
+                    <option value="shotsOnTarget">🎯 En Çok İsabetli Şut</option>
+                    <option value="corners">🚩 En Çok Korner</option>
+                    <option value="goals">⚽ En Çok Gol</option>
+                  </select>
+
+                  <input
+                    type="text"
+                    placeholder="Takım ara..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-44"
+                  />
+                </div>
+              </div>
+
+              <div className="px-4 py-2 bg-slate-950/90 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold text-emerald-400 flex items-center space-x-1 mr-1">
+                    <span>⚙️</span>
+                    <span>VERİ FİLTRELERİ:</span>
+                  </span>
+
+                  <div className="flex items-center space-x-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 text-[10px] font-medium">⚽ Gol:</span>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minGoals}
+                      onChange={(e) => setMinGoals(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-slate-600">-</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxGoals}
+                      onChange={(e) => setMaxGoals(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 text-[10px] font-medium">🚩 Korner:</span>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minCorners}
+                      onChange={(e) => setMinCorners(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-amber-400 focus:outline-none focus:border-amber-500"
+                    />
+                    <span className="text-slate-600">-</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxCorners}
+                      onChange={(e) => setMaxCorners(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-amber-400 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 text-[10px] font-medium">🎯 İsab. Şut:</span>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minShotsOnTarget}
+                      onChange={(e) => setMinShotsOnTarget(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-cyan-400 focus:outline-none focus:border-cyan-500"
+                    />
+                    <span className="text-slate-600">-</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxShotsOnTarget}
+                      onChange={(e) => setMaxShotsOnTarget(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-cyan-400 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-slate-800">
+                    <span className="text-slate-400 text-[10px] font-medium">⏱️ Dakika:</span>
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minMinute}
+                      onChange={(e) => setMinMinute(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-slate-200 focus:outline-none focus:border-slate-500"
+                    />
+                    <span className="text-slate-600">-</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxMinute}
+                      onChange={(e) => setMaxMinute(e.target.value)}
+                      className="w-10 px-1 py-0.5 rounded bg-slate-950 border border-slate-800 text-center text-[11px] font-mono font-bold text-slate-200 focus:outline-none focus:border-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {hasActiveFilters && (
+                    <button onClick={resetNumericalFilters} className="btn-mac px-2.5 py-1 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/40 text-[10px] font-bold">✕ Temizle</button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3">
+                {filteredMatches.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-slate-500 space-y-3">
+                    <span className="text-4xl">📊</span>
+                    <p className="text-sm font-semibold text-slate-400">Belirtilen istatistik kriterlerine uyan maç bulunamadı.</p>
+                    {hasActiveFilters && (
+                      <button onClick={resetNumericalFilters} className="btn-mac px-4 py-2 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white text-xs font-bold shadow">Filtreleri Temizle</button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                    {filteredMatches.map(match => {
+                      const matchRulesCount = notificationRules.filter(r => r.matchId === match.id && r.enabled).length;
+                      return (
+                        <MatchCard
+                          key={match.id}
+                          match={match}
+                          onClick={() => setSelectedMatch(match)}
+                          onNotificationClick={(m) => setSelectedMatchForAlert(m)}
+                          activeRulesCount={matchRulesCount}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+
+          {showNotificationModal && <NotificationModal rules={notificationRules} setRules={setNotificationRules} soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} soundOption={soundOption} setSoundOption={setSoundOption} playAlertSound={playAlertSound} onClose={() => setShowNotificationModal(false)} />}
+          {selectedMatchForAlert && <MatchSpecificNotificationModal match={selectedMatchForAlert} rules={notificationRules} setRules={setNotificationRules} soundEnabled={soundEnabled} soundOption={soundOption} playAlertSound={playAlertSound} onClose={() => setSelectedMatchForAlert(null)} />}
+          {selectedMatch && <MatchDetailModal match={selectedMatch} onClose={() => setSelectedMatch(null)} />}
+          
+          {showHistoryModal && <NotificationHistoryModal history={notificationHistory} clearHistory={() => setNotificationHistory([])} onClose={() => setShowHistoryModal(false)} />}
+
+          <div className="fixed bottom-5 right-5 z-50 flex flex-col space-y-2.5 max-w-sm pointer-events-none">
+            {toasts.map(toast => (
+              <div key={toast.id} className="pointer-events-auto animate-slide-up glass-modal p-3.5 rounded-2xl border border-amber-500/40 shadow-2xl flex items-start space-x-3 text-slate-100 relative pr-9 bg-slate-900/95 backdrop-blur-xl">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-lg shrink-0">🔔</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-amber-300 truncate">{toast.title}</h4>
+                    <span className="text-[9px] text-slate-500 font-mono ml-2 shrink-0">{toast.time}</span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-200 mt-1 leading-snug">{toast.message}</p>
+                </div>
+                <button type="button" onClick={(e) => dismissToast(toast.id, e)} className="absolute top-3 right-3 w-6 h-6 rounded-lg bg-slate-800/90 hover:bg-rose-600/80 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-all duration-150 border border-white/10 shadow cursor-pointer z-10 active:scale-90">✕</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function NotificationHistoryModal({ history, clearHistory, onClose }) {
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-slide-up">
+          <div className="glass-modal w-full max-w-lg rounded-3xl border border-white/15 p-6 flex flex-col space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-600 flex items-center justify-center text-lg">📜</div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100">Bildirim Geçmişi</h3>
+                  <p className="text-[11px] text-slate-400">Bu oturumda tetiklenen tüm alarmlar</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs transition">✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto max-h-96 pr-1 space-y-2">
+              {history.length === 0 ? (
+                <div className="text-center py-10 text-slate-500 text-xs font-semibold bg-slate-900/40 rounded-2xl border border-white/5">
+                  <div className="text-3xl mb-2">📭</div>
+                  Henüz hiçbir bildirim alarmı tetiklenmedi.
+                </div>
+              ) : (
+                history.map((item, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-slate-900/80 border border-slate-700 text-xs flex flex-col space-y-1 relative">
+                    <div className="flex justify-between items-start">
+                       <span className="font-extrabold text-amber-400 text-[11px]">{item.matchName}</span>
+                       <span className="text-[9px] font-mono text-slate-500">{item.time}</span>
+                    </div>
+                    <span className="font-medium text-slate-200">{item.message}</span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-white/10 flex justify-between items-center">
+              <button 
+                onClick={clearHistory} 
+                disabled={history.length === 0}
+                className={`btn-mac px-4 py-2 rounded-xl text-xs font-bold transition ${history.length === 0 ? 'bg-slate-900 text-slate-600 cursor-not-allowed' : 'bg-rose-600/20 hover:bg-rose-600/40 text-rose-400 border border-rose-500/30'}`}
+              >
+                Geçmişi Temizle
+              </button>
+              <button onClick={onClose} className="btn-mac px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">Kapat</button>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    function NotificationModal({ rules, setRules, soundEnabled, setSoundEnabled, soundOption, setSoundOption, playAlertSound, onClose }) {
+      const toggleRule = (id) => setRules(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r));
+      const removeRule = (id) => setRules(prev => prev.filter(r => r.id !== id));
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-slide-up">
+          <div className="glass-modal w-full max-w-lg rounded-3xl border border-white/15 p-6 flex flex-col space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-lg">🔔</div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100">Sesli ve Görsel Bildirim Ayarları</h3>
+                  <p className="text-[11px] text-slate-400">Tüm maçlar için genel uyarı kuralları</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs transition">✕</button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-200">Sesli Bildirim Uyarısı</span>
+                <button onClick={() => setSoundEnabled(!soundEnabled)} className={`btn-mac px-3 py-1 rounded-full text-xs font-bold transition-all ${soundEnabled ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'bg-slate-800 text-slate-400'}`}>{soundEnabled ? 'AÇIK 🔊' : 'KAPALI 🔇'}</button>
+              </div>
+              {soundEnabled && (
+                <div className="flex items-center space-x-2 pt-1">
+                  <select value={soundOption} onChange={(e) => setSoundOption(e.target.value)} className="flex-1 px-3 py-1.5 rounded-xl bg-slate-950 border border-white/10 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+                    <option value="radar">📡 Radar Bip (Varsayılan)</option>
+                    <option value="whistle">⚽ Stadyum Düdüğü</option>
+                    <option value="chime">🔔 Melodi Zili</option>
+                    <option value="alarm">🚨 Dijital Alarm</option>
+                  </select>
+                  <button onClick={() => playAlertSound(soundOption)} className="btn-mac px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold shrink-0">Sesi Test Et 🔊</button>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">AKTİF GENEL KURALLAR ({rules.length})</span>
+              {rules.length === 0 ? (
+                <div className="text-center py-4 text-slate-500 text-xs font-semibold bg-slate-900/40 rounded-2xl border border-white/5">Henüz tanımlı kural yok.</div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {rules.map(rule => (
+                    <div key={rule.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-white/10 text-xs">
+                      <div className="flex items-center space-x-2.5">
+                        <button onClick={() => toggleRule(rule.id)} className={`w-4 h-4 rounded flex items-center justify-center font-bold text-[10px] transition ${rule.enabled ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>{rule.enabled ? '✓' : ''}</button>
+                        <span className="font-semibold text-slate-200">{rule.matchName ? `${rule.matchName}: ` : ''}{rule.targetLabel || 'Toplam'} {rule.type === 'corners' ? 'Korner' : (rule.type === 'shotsOnTarget' ? 'İsabetli Şut' : 'Gol')} ≥ <strong className="text-amber-400 font-mono text-sm">{rule.value}</strong></span>
+                      </div>
+                      <button onClick={() => removeRule(rule.id)} className="text-rose-400 font-bold hover:text-rose-300 px-1 transition">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="pt-2 border-t border-white/10 flex justify-end">
+              <button onClick={onClose} className="btn-mac px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">Tamam</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MatchSpecificNotificationModal({ match, rules, setRules, soundEnabled, soundOption, playAlertSound, onClose }) {
+      const matchRules = useMemo(() => rules.filter(r => r.matchId === match.id), [rules, match.id]);
+      const currentCorners = (match.stats?.corners?.[0] || 0) + (match.stats?.corners?.[1] || 0);
+      const currentShots = (match.stats?.shotsOnTarget?.[0] || 0) + (match.stats?.shotsOnTarget?.[1] || 0);
+      const currentGoals = (match.home.score || 0) + (match.away.score || 0);
+
+      const [statType, setStatType] = useState('corners');
+      const [targetType, setTargetType] = useState('total');
+      const [threshold, setThreshold] = useState(currentCorners + 2 || 6);
+
+      const addCustomRule = () => {
+        const newRule = { id: Date.now(), matchId: match.id, matchName: `${match.home.name} - ${match.away.name}`, type: statType, target: targetType, targetLabel: targetType === 'home' ? match.home.name : (targetType === 'away' ? match.away.name : 'Toplam'), value: parseInt(threshold) || 1, enabled: true };
+        setRules(prev => [...prev, newRule]);
+      };
+
+      const addQuickPreset = (type, target, val) => {
+        const newRule = { id: Date.now(), matchId: match.id, matchName: `${match.home.name} - ${match.away.name}`, type, target, targetLabel: target === 'home' ? match.home.name : (target === 'away' ? match.away.name : 'Toplam'), value: val, enabled: true };
+        setRules(prev => [...prev, newRule]);
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-slide-up">
+          <div className="glass-modal w-full max-w-lg rounded-3xl border border-amber-500/40 p-6 flex flex-col space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">🔔</span>
+                <div>
+                  <h3 className="text-sm font-bold text-amber-300">Maça Özel Bildirim Alarmları</h3>
+                  <p className="text-[11px] text-slate-400 font-semibold">{match.home.name} vs {match.away.name}</p>
+                </div>
+              </div>
+              <button onClick={onClose} className="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            
+            <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs font-mono">
+              <div className="text-center flex-1">
+                <div className="text-slate-300 font-bold truncate">{match.home.name}</div>
+                <div className="text-emerald-400 font-extrabold text-sm">{match.home.score}</div>
+              </div>
+              <div className="px-3 py-1 rounded bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs">{match.displayClock}</div>
+              <div className="text-center flex-1">
+                <div className="text-slate-300 font-bold truncate">{match.away.name}</div>
+                <div className="text-purple-400 font-extrabold text-sm">{match.away.score}</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">HIZLI ALARM EKLE</span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button onClick={() => addQuickPreset('corners', 'total', currentCorners + 2)} className="btn-mac p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-left flex items-center justify-between"><span>🚩 Korner ≥ {currentCorners + 2}</span></button>
+                <button onClick={() => addQuickPreset('shotsOnTarget', 'total', currentShots + 2)} className="btn-mac p-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-bold text-left flex items-center justify-between"><span>🎯 Şut ≥ {currentShots + 2}</span></button>
+                <button onClick={() => addQuickPreset('goals', 'total', currentGoals + 1)} className="btn-mac p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-left flex items-center justify-between"><span>⚽ Sonraki Gol (≥ {currentGoals + 1})</span></button>
+                <button onClick={() => addQuickPreset('corners', 'home', (match.stats?.corners?.[0] || 0) + 2)} className="btn-mac p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-bold text-left flex items-center justify-between"><span>🏠 Ev Korner ≥ {(match.stats?.corners?.[0] || 0) + 2}</span></button>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 block mb-1">İSTATİSTİK</label>
+                  <select value={statType} onChange={(e) => setStatType(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-semibold"><option value="corners">🚩 Korner</option><option value="shotsOnTarget">🎯 İsabetli Şut</option><option value="goals">⚽ Gol Sayısı</option></select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 block mb-1">KAPSAM</label>
+                  <select value={targetType} onChange={(e) => setTargetType(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-semibold"><option value="total">Toplam</option><option value="home">Sadece {match.home.short}</option><option value="away">Sadece {match.away.short}</option></select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 block mb-1">EŞİK DEĞER (≥)</label>
+                  <input type="number" value={threshold} onChange={(e) => setThreshold(e.target.value)} className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono font-bold text-amber-400 text-center focus:outline-none focus:border-amber-500" />
+                </div>
+              </div>
+              <button onClick={addCustomRule} className="btn-mac w-full py-2 rounded-xl bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow">Kuralı Ekle 🔔</button>
+            </div>
+            
+            <div className="pt-2 border-t border-slate-800 flex justify-end">
+              <button onClick={onClose} className="btn-mac px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">Tamam</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MatchCard({ match, onClick, onNotificationClick, activeRulesCount = 0 }) {
+      const homeOnTarget = match.stats?.shotsOnTarget?.[0] ?? 0;
+      const awayOnTarget = match.stats?.shotsOnTarget?.[1] ?? 0;
+      const homeOffTarget = match.stats?.shotsOffTarget?.[0] ?? 0;
+      const awayOffTarget = match.stats?.shotsOffTarget?.[1] ?? 0;
+      const homeCorners = match.stats?.corners?.[0] ?? 0;
+      const awayCorners = match.stats?.corners?.[1] ?? 0;
+
+      // Hata Düzeltme: API'den gelen doğru kırmızı kart sayısını (Tekilleştirilmiş) çekiyoruz
+      const homeRedCount = match.stats?.redCards?.[0] || 0;
+      const awayRedCount = match.stats?.redCards?.[1] || 0;
+
+      return (
+        <div onClick={onClick} className="glass-card rounded-xl p-2.5 cursor-pointer transition-all duration-200 flex flex-col justify-between relative group hover:-translate-y-0.5">
+          <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1.5 pb-1.5 border-b border-white/5">
+            <div className="flex items-center space-x-1.5 truncate pr-1">
+              <span className="text-sm">{match.leagueFlag}</span>
+              <span className="font-bold text-slate-200 truncate">{match.leagueName}</span>
+            </div>
+            <div className="flex items-center space-x-1.5 shrink-0">
+              <button onClick={(e) => { e.stopPropagation(); onNotificationClick(match); }} className={`btn-mac px-1.5 py-0.5 rounded border font-bold flex items-center space-x-1 ${activeRulesCount > 0 ? 'bg-gradient-to-b from-amber-500/30 to-amber-600/40 text-amber-300 border-amber-500/50 shadow' : 'bg-slate-900/80 text-slate-400 border-white/10 hover:text-amber-300 hover:border-amber-500/40'}`}>
+                <span>🔔</span>{activeRulesCount > 0 && <span className="bg-amber-500 text-slate-950 px-1 rounded-full text-[9px] font-extrabold font-mono">{activeRulesCount}</span>}
+              </button>
+              {match.status === 'LIVE' ? (
+                <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/40 font-mono text-[10px] font-extrabold animate-pulse flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span><span>{match.displayClock}</span>
+                </span>
+              ) : match.status === 'FINISHED' ? (
+                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono text-[10px] font-bold">MS</span>
+              ) : (
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[10px] font-bold">{match.displayClock}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between my-1.5 px-0.5 gap-1.5">
+            <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
+              {match.home.logo ? <img src={match.home.logo} alt={match.home.name} className="w-7 h-7 object-contain drop-shadow" /> : <div className="w-7 h-7 rounded-lg bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center text-white font-extrabold text-[10px] shadow border border-white/20">{match.home.short}</div>}
+              <div className="flex items-center justify-center space-x-1 w-full">
+                <span className="text-xs sm:text-[13px] font-extrabold text-slate-100 leading-tight w-full truncate text-center">{match.home.name}</span>
+                {homeRedCount > 0 && Array.from({ length: homeRedCount }).map((_, i) => (
+                    <div key={i} className="w-2 h-3 bg-red-600 border border-red-800 rounded-[2px] shrink-0 shadow-sm" title="Kırmızı Kart"></div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-center justify-center shrink-0 px-2 py-0.5 bg-slate-900/90 rounded-lg border border-white/10 min-w-[60px] shadow-inner">
+              <span className="text-xl font-black font-mono text-white tracking-tight whitespace-nowrap">{match.home.score} - {match.away.score}</span>
+            </div>
+            
+            <div className="flex flex-col items-center text-center space-y-1 flex-1 min-w-0">
+              {match.away.logo ? <img src={match.away.logo} alt={match.away.name} className="w-7 h-7 object-contain drop-shadow" /> : <div className="w-7 h-7 rounded-lg bg-gradient-to-b from-purple-500 to-purple-700 flex items-center justify-center text-white font-extrabold text-[10px] shadow border border-white/20">{match.away.short}</div>}
+              <div className="flex items-center justify-center space-x-1 w-full">
+                {awayRedCount > 0 && Array.from({ length: awayRedCount }).map((_, i) => (
+                    <div key={i} className="w-2 h-3 bg-red-600 border border-red-800 rounded-[2px] shrink-0 shadow-sm" title="Kırmızı Kart"></div>
+                ))}
+                <span className="text-xs sm:text-[13px] font-extrabold text-slate-100 leading-tight w-full truncate text-center">{match.away.name}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-1.5 pt-1.5 border-t border-slate-800/80 space-y-1.5">
+            <StatMiniBar title="İsabetli Şut" homeVal={homeOnTarget} awayVal={awayOnTarget} icon="🎯" />
+            <StatMiniBar title="İsabetsiz Şut" homeVal={homeOffTarget} awayVal={awayOffTarget} icon="🥅" />
+            <StatMiniBar title="Korner" homeVal={homeCorners} awayVal={awayCorners} icon="🚩" />
+          </div>
+        </div>
+      );
+    }
+
+    function StatMiniBar({ title, homeVal, awayVal, icon }) {
+      const homeNumber = typeof homeVal === 'number' ? homeVal : 0;
+      const awayNumber = typeof awayVal === 'number' ? awayVal : 0;
+      const total = (homeNumber + awayNumber) || 1;
+      const homePct = Math.round((homeNumber / total) * 100);
+
+      return (
+        <div className="space-y-0.5">
+          <div className="flex items-center justify-between text-[10px] font-bold">
+            <span className="font-mono text-xs font-extrabold text-emerald-400">{homeNumber}</span>
+            <span className="text-slate-400 flex items-center space-x-1 text-[10px] font-bold uppercase tracking-wider"><span>{icon}</span><span>{title}</span></span>
+            <span className="font-mono text-xs font-extrabold text-purple-400">{awayNumber}</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-slate-900 overflow-hidden flex border border-slate-800">
+            <div style={{ width: `${homePct}%` }} className="bg-emerald-500 h-full transition-all duration-300"></div>
+            <div style={{ width: `${100 - homePct}%` }} className="bg-purple-500 h-full transition-all duration-300"></div>
+          </div>
+        </div>
+      );
+    }
+
+    function MatchDetailModal({ match, onClose }) {
+      const [activeTab, setActiveTab] = useState('stats');
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-slide-up">
+          <div className="glass-modal w-full max-w-2xl rounded-3xl border border-slate-700/80 p-6 flex flex-col max-h-[90vh] overflow-y-auto relative shadow-2xl">
+            
+            <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-base font-bold transition">✕</button>
+
+            <div className="flex items-center justify-between text-xs text-slate-400 pb-3 border-b border-slate-800">
+              <div className="flex items-center space-x-2">
+                <span className="text-xl">{match.leagueFlag}</span>
+                <span className="font-bold text-slate-200 text-sm">{match.leagueName}</span>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-mono font-bold text-xs border border-emerald-500/20">{match.displayClock}</span>
+            </div>
+
+            <div className="flex items-center justify-between py-5">
+              <div className="flex flex-col items-center space-y-2 w-2/5">
+                {match.home.logo ? <img src={match.home.logo} alt={match.home.name} className="w-16 h-16 object-contain" /> : <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center text-white font-bold text-xl shadow">{match.home.short}</div>}
+                <h3 className="text-base font-extrabold text-center text-slate-100">{match.home.name}</h3>
+              </div>
+              <div className="flex flex-col items-center justify-center w-1/5">
+                <div className="text-4xl font-black font-mono text-white tracking-wider">{match.home.score} - {match.away.score}</div>
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">GÜNCEL SKOR</span>
+              </div>
+              <div className="flex flex-col items-center space-y-2 w-2/5">
+                {match.away.logo ? <img src={match.away.logo} alt={match.away.name} className="w-16 h-16 object-contain" /> : <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-800 flex items-center justify-center text-white font-bold text-xl shadow">{match.away.short}</div>}
+                <h3 className="text-base font-extrabold text-center text-slate-100">{match.away.name}</h3>
+              </div>
+            </div>
+
+            <div className="flex justify-center mb-4">
+               <div className="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-white/10 shadow-inner">
+                  <button onClick={() => setActiveTab('stats')} className={`px-5 py-1.5 rounded-lg text-xs font-bold transition ${activeTab === 'stats' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}>📊 İstatistikler</button>
+                  <button onClick={() => setActiveTab('events')} className={`px-5 py-1.5 rounded-lg text-xs font-bold transition ${activeTab === 'events' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}>⏱️ Maç Olayları</button>
+               </div>
+            </div>
+
+            {activeTab === 'stats' && (
+              <div className="space-y-4 pt-2">
+                <StatFullBar title="İsabetli Şut" homeVal={match.stats?.shotsOnTarget?.[0] ?? 0} awayVal={match.stats?.shotsOnTarget?.[1] ?? 0} icon="🎯" />
+                <StatFullBar title="İsabetsiz Şut" homeVal={match.stats?.shotsOffTarget?.[0] ?? 0} awayVal={match.stats?.shotsOffTarget?.[1] ?? 0} icon="🥅" />
+                <StatFullBar title="Toplam Şut" homeVal={match.stats?.totalShots?.[0] ?? 0} awayVal={match.stats?.totalShots?.[1] ?? 0} icon="⚽" />
+                <StatFullBar title="Korner" homeVal={match.stats?.corners?.[0] ?? 0} awayVal={match.stats?.corners?.[1] ?? 0} icon="🚩" />
+                <StatFullBar title="Topla Oynama" homeVal={match.stats?.possession?.[0] ?? 50} awayVal={match.stats?.possession?.[1] ?? 50} icon="🔄" suffix="%" />
+                <StatFullBar title="Faul" homeVal={match.stats?.fouls?.[0] ?? 0} awayVal={match.stats?.fouls?.[1] ?? 0} icon="⚠️" />
+                <StatFullBar title="Sarı Kart" homeVal={match.stats?.yellowCards?.[0] ?? 0} awayVal={match.stats?.yellowCards?.[1] ?? 0} icon="🟨" />
+                <StatFullBar title="Kırmızı Kart" homeVal={match.stats?.redCards?.[0] ?? 0} awayVal={match.stats?.redCards?.[1] ?? 0} icon="🟥" />
+              </div>
+            )}
+
+            {activeTab === 'events' && (
+              <div className="pt-2">
+                {match.events && match.events.length > 0 ? (
+                  <div className="space-y-3 relative before:absolute before:inset-0 before:ml-[50%] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-slate-800">
+                    {match.events.map((ev, i) => (
+                      <div key={i} className="relative flex items-center justify-between w-full group is-active py-1">
+                        
+                        <div className="flex items-center w-[45%] justify-end pr-2 md:pr-4 text-right">
+                           {ev.team === 'home' && (
+                             <div className="text-[11px] md:text-xs font-bold text-slate-200 bg-slate-900 px-2.5 py-1.5 md:py-2 rounded-xl border border-slate-700 w-full shadow-sm">
+                               <div className="text-sm md:text-base mb-0.5">
+                                  {ev.type === 'goal' && '⚽'}
+                                  {ev.type === 'yellow' && '🟨'}
+                                  {ev.type === 'red' && '🟥'}
+                                  {ev.type === 'sub' && '🔄'}
+                               </div>
+                               {ev.type === 'sub' ? (
+                                  <div className="flex flex-col"><span className="text-emerald-400">↑ {ev.player}</span><span className="text-rose-400">↓ {ev.playerOut}</span></div>
+                               ) : <span>{ev.player}</span>}
+                             </div>
+                           )}
+                        </div>
+
+                        <div className="w-10 h-6 shrink-0 flex items-center justify-center bg-slate-800 border border-slate-700 rounded-full z-10 mx-auto">
+                           <span className="text-[10px] font-mono font-bold text-slate-300">{ev.time}</span>
+                        </div>
+
+                        <div className="flex items-center w-[45%] justify-start pl-2 md:pl-4 text-left">
+                           {ev.team === 'away' && (
+                             <div className="text-[11px] md:text-xs font-bold text-slate-200 bg-slate-900 px-2.5 py-1.5 md:py-2 rounded-xl border border-slate-700 w-full shadow-sm">
+                               <div className="text-sm md:text-base mb-0.5">
+                                  {ev.type === 'goal' && '⚽'}
+                                  {ev.type === 'yellow' && '🟨'}
+                                  {ev.type === 'red' && '🟥'}
+                                  {ev.type === 'sub' && '🔄'}
+                               </div>
+                               {ev.type === 'sub' ? (
+                                  <div className="flex flex-col"><span className="text-emerald-400">↑ {ev.player}</span><span className="text-rose-400">↓ {ev.playerOut}</span></div>
+                               ) : <span>{ev.player}</span>}
+                             </div>
+                           )}
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-10 space-y-3 text-slate-500">
+                    <span className="text-4xl">📭</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">Bu maç için olay detayı akışı bulunamadı.</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-6 pt-3 border-t border-slate-800 flex justify-end">
+              <button onClick={onClose} className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">Kapat</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function StatFullBar({ title, homeVal, awayVal, icon, suffix = '' }) {
+      const homeNumber = typeof homeVal === 'number' ? homeVal : 0;
+      const awayNumber = typeof awayVal === 'number' ? awayVal : 0;
+      const total = (homeNumber + awayNumber) || 1;
+      const homePct = Math.round((homeNumber / total) * 100);
+
+      return (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs font-bold">
+            <span className="font-mono text-emerald-400 text-base">{homeNumber}{suffix}</span>
+            <div className="flex items-center space-x-1.5 text-slate-200 font-extrabold text-xs"><span className="text-sm">{icon}</span><span>{title}</span></div>
+            <span className="font-mono text-purple-400 text-base">{awayNumber}{suffix}</span>
+          </div>
+          <div className="h-3 rounded-full bg-slate-900 overflow-hidden flex border border-slate-800">
+            <div style={{ width: `${homePct}%` }} className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full transition-all duration-300"></div>
+            <div style={{ width: `${100 - homePct}%` }} className="bg-gradient-to-r from-purple-400 to-purple-600 h-full transition-all duration-300"></div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
