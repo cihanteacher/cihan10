@@ -371,7 +371,7 @@
         try {
           const now = new Date();
           const todayStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-          const res = await fetch(`https://corsproxy.io/?https://www.fotmob.com/api/matches?date=${todayStr}`, { cache: 'no-store' });
+          const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.fotmob.com/api/matches?date=${todayStr}`)}`, { cache: 'no-store' });
           if (!res.ok) return null;
           const data = await res.json();
           if (!data.leagues || !Array.isArray(data.leagues)) return null;
@@ -571,7 +571,7 @@
           const todayStr = now.toISOString().slice(0, 10).replace(/-/g, '');
 
           const requests = targetLeagueCodes.map(code =>
-            fetch(`https://corsproxy.io/?https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${todayStr}&_t=${Date.now()}`, { cache: 'no-store' })
+            fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${todayStr}&_t=${Date.now()}`)}`, { cache: 'no-store' })
               .then(r => r.json())
               .catch(() => null)
           );
